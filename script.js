@@ -643,103 +643,108 @@ document.addEventListener('DOMContentLoaded', function() {
 
         // Contadores para cada tipo de registro
         const totals = {
-            N: 0, // Nova Adesão Titular
-            D: 0, // Novo Dependente
-            C: 0, // Cancelamento
-            I: 0, // Inclusão de Dependente
-            E: 0, // Exclusão de Dependente
-            U: 0, // Movimentação de Plano (Upgrade)
-            A: 0  // Alteração de Dados Cadastrais
+            N: 0,
+            D: 0,
+            C: 0,
+            I: 0,
+            E: 0,
+            U: 0,
+            A: 0
         };
         
-        // Adicionar cabeçalho (conta como 1 registro no total)
+        // Linha de cabeçalho
         fileContent += `1|H|MOVIMENTACAO|${accountNumber}|${formatDate(new Date())}\n`;
         
-        // Processar registros e contar cada tipo
+        // Processar registros
         spreadsheetData.forEach((rowData, index) => {
             const lineNumber = index + 2;
             const tipoRegistro = rowData.tipoRegistro || 'N';
             
-            // Incrementar o contador do tipo correspondente
             if (totals.hasOwnProperty(tipoRegistro)) {
                 totals[tipoRegistro]++;
             }
 
-            // Adicionar linha de detalhe
-            fileContent += `${lineNumber}|${tipoRegistro}|` +
-                `${rowData.plano || ''}|` +
-                `${rowData.codigoBeneficiario || ''}|` +
-                `${rowData.nomeCompleto || ''}|` +
-                `${rowData.cpfBeneficiario || ''}|` +
-                `${rowData.rgRneBeneficiario || ''}|` +
-                `${rowData.orgaoExpedidor || ''}|` +
-                `${rowData.nomeMae || ''}|` +
-                `${rowData.dataNascimento || ''}|` +
-                `${rowData.sexo || ''}|` +
-                `${rowData.cns || ''}|` +
-                `${rowData.estadoCivil || ''}|` +
-                `${rowData.logradouro || ''}|` +
-                `${rowData.numero || ''}|` +
-                `${rowData.complemento || ''}|` +
-                `${rowData.bairro || ''}|` +
-                `${rowData.cidade || ''}|` +
-                `${rowData.uf || ''}|` +
-                `${rowData.cep || ''}|` +
-                `${rowData.tipoTelefone1 || ''}|` +
-                `${rowData.dddTelefone1 || ''}|` +
-                `${rowData.telefone1 || ''}|` +
-                `${rowData.ramalTelefone1 || ''}|` +
-                `${rowData.tipoTelefone2 || ''}|` +
-                `${rowData.dddTelefone2 || ''}|` +
-                `${rowData.telefone2 || ''}|` +
-                `${rowData.ramalTelefone2 || ''}|` +
-                `${rowData.servidorPublico || ''}|` +
-                `${rowData.tipoMovimentacao || ''}|` +
-                `${rowData.valorMensalidade || ''}|` +
-                `${rowData.dataOperacao || ''}|` +
-                `${rowData.dataInicioVigencia || ''}|` +
-                `${rowData.motivoCancelamento || ''}|` +
-                `${rowData.formaPagamento || ''}|` +
-                `${rowData.banco || ''}|` +
-                `${rowData.agencia || ''}|` +
-                `${rowData.contaCorrente || ''}|` +
-                `${rowData.tipoConta || ''}|` +
-                `${rowData.codigoVendedor || ''}|` +
-                `${rowData.codigoGerente || ''}|` +
-                `${rowData.codigoLoja || ''}|` +
-                `${rowData.codigoRegional || ''}|` +
-                `${rowData.contrato || ''}|` +
-                `${rowData.locacao || ''}|` +
-                `${rowData.email || ''}|` +
-                `${rowData.diaCobranca || ''}|` +
-                `${rowData.grauParentesco || ''}|` +
-                `${rowData.vinculoCpfTitular || ''}|` +
-                `${rowData.codigoBeneficiarioTitular || ''}|` +
-                `${rowData.funcionalMatricula || ''}|` +
-                `${rowData.centroCusto || ''}|` +
-                `${rowData.carteirinha || ''}|` +
-                `${rowData.naturezaDocumentoIdentificacao || ''}|` +
-                `${rowData.dataExpedicao || ''}|` +
-                `${rowData.passaporteCarteiraCivil || ''}|` +
-                `${rowData.atividadePrincipalDesenvolvida || ''}|` +
-                `${rowData.idRegistroRemessa || ''}|` +
-                `${rowData.emBranco1 || ''}|` +
-                `${rowData.emBranco2 || ''}|\n`;
+            // Criar array com todos os 60 campos
+            const fields = [
+                lineNumber,                                    // 1
+                tipoRegistro,                                 // 2
+                rowData.plano || '',                          // 3
+                rowData.codigoBeneficiario || '',            // 4
+                rowData.nomeCompleto || '',                   // 5
+                rowData.cpfBeneficiario || '',               // 6
+                rowData.rgRneBeneficiario || '',             // 7
+                rowData.orgaoExpedidor || '',                // 8
+                rowData.nomeMae || '',                       // 9
+                rowData.dataNascimento || '',                // 10
+                rowData.sexo || '',                          // 11
+                rowData.cns || '',                           // 12
+                rowData.estadoCivil || '',                   // 13
+                rowData.logradouro || '',                    // 14
+                rowData.numero || '',                        // 15
+                rowData.complemento || '',                   // 16
+                rowData.bairro || '',                       // 17
+                rowData.cidade || '',                       // 18
+                rowData.uf || '',                           // 19
+                rowData.cep || '',                          // 20
+                rowData.tipoTelefone1 || '',                // 21
+                rowData.dddTelefone1 || '',                 // 22
+                rowData.telefone1 || '',                    // 23
+                rowData.ramalTelefone1 || '',               // 24
+                rowData.tipoTelefone2 || '',                // 25
+                rowData.dddTelefone2 || '',                 // 26
+                rowData.telefone2 || '',                    // 27
+                rowData.ramalTelefone2 || '',               // 28
+                rowData.servidorPublico || '',              // 29
+                rowData.tipoMovimentacao || '',             // 30
+                rowData.valorMensalidade || '',             // 31
+                rowData.dataOperacao || '',                 // 32
+                rowData.dataInicioVigencia || '',           // 33
+                rowData.motivoCancelamento || '',           // 34
+                rowData.formaPagamento || '',               // 35
+                rowData.banco || '',                        // 36
+                rowData.agencia || '',                      // 37
+                rowData.contaCorrente || '',                // 38
+                rowData.tipoConta || '',                    // 39
+                rowData.codigoVendedor || '',               // 40
+                rowData.codigoGerente || '',                // 41
+                rowData.codigoLoja || '',                   // 42
+                rowData.codigoRegional || '',               // 43
+                rowData.contrato || '',                     // 44
+                rowData.locacao || '',                      // 45
+                rowData.email || '',                        // 46
+                rowData.diaCobranca || '',                  // 47
+                rowData.grauParentesco || '',               // 48
+                rowData.vinculoCpfTitular || '',            // 49
+                rowData.codigoBeneficiarioTitular || '',    // 50
+                rowData.funcionalMatricula || '',           // 51
+                rowData.centroCusto || '',                  // 52
+                rowData.carteirinha || '',                  // 53
+                rowData.naturezaDocumentoIdentificacao || '', // 54
+                rowData.dataExpedicao || '',                // 55
+                rowData.passaporteCarteiraCivil || '',      // 56
+                rowData.atividadePrincipalDesenvolvida || '', // 57
+                rowData.idRegistroRemessa || '',            // 58
+                rowData.emBranco1 || '',                    // 59
+                rowData.emBranco2 || ''                     // 60
+            ];
+
+            // Adicionar linha com exatamente 60 campos
+            fileContent += fields.join('|') + '\n';
         });
         
         // Calcular total de registros (header + registros + trailer)
-        const totalRegistros = spreadsheetData.length + 2; // +2 para header e trailer
+        const totalRegistros = spreadsheetData.length + 2;
         
-        // Adicionar linha de trailer com os totais corretos
+        // Adicionar linha de trailer
         fileContent += `${totalRegistros}|T|` +
-            `${totals.N}|` +   // Total de registros "N"
-            `${totals.D}|` +   // Total de registros "D"
-            `${totals.C}|` +   // Total de registros "C"
-            `${totals.I}|` +   // Total de registros "I"
-            `${totals.E}|` +   // Total de registros "E"
-            `${totals.U}|` +   // Total de registros "U"
-            `${totals.A}|` +   // Total de registros "A"
-            `${totalRegistros}`; // Total geral de registros
+            `${totals.N}|` +
+            `${totals.D}|` +
+            `${totals.C}|` +
+            `${totals.I}|` +
+            `${totals.E}|` +
+            `${totals.U}|` +
+            `${totals.A}|` +
+            `${totalRegistros}`;
         
         output.textContent = fileContent;
         btnCopy.classList.remove('hidden');
