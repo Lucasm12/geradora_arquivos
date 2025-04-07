@@ -95,6 +95,7 @@ document.addEventListener('DOMContentLoaded', function() {
     let selectedTipoRegistro = '';
     let defaultTipoRegistro = '';
 
+
     // Definições de validação para cada campo
     const FIELD_VALIDATIONS = {
         sequencialRegistro: {
@@ -283,6 +284,25 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Inicialização
     function initSpreadsheet() {
+        // Adicionar campo de conta antes dos botões
+        const headerDiv = document.querySelector('header > div:last-child');
+        const accountContainer = document.createElement('div');
+        accountContainer.className = 'flex items-center mr-4';
+        accountContainer.innerHTML = `
+            <div class="relative">
+                <input type="text" 
+                       id="accountNumber" 
+                       class="px-3 py-1 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" 
+                       placeholder="Cod Conta"
+                       style="width: 120px;">
+                <div id="accountError" class="absolute text-red-500 text-xs mt-1 hidden">
+                    Campo obrigatório
+                </div>
+            </div>
+        `;
+        
+        headerDiv.insertBefore(accountContainer, headerDiv.firstChild);
+
         // Limpar tabela
         headerRow.innerHTML = '';
         sheetBody.innerHTML = '';
@@ -602,11 +622,22 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Gerar o arquivo no formato especificado
     function generateFile() {
+        const accountNumber = document.getElementById('accountNumber')?.value?.trim();
+        const accountError = document.getElementById('accountError');
+        
+        if (!accountNumber) {
+            if (accountError) accountError.classList.remove('hidden');
+            showAlert('Por favor, preencha o número da conta da empresa', 'error');
+            document.getElementById('accountNumber')?.focus();
+            return;
+        }
+        
+        if (accountError) accountError.classList.add('hidden');
         let fileContent = '';
         
-                // Cabeçalho (linha 1)
-                fileContent += `1|H|MOVIMENTACAO|2|${formatDate(new Date())}\n`;
-                
+        // Usar o número da conta dinâmico no cabeçalho
+        fileContent += `1|H|MOVIMENTACAO|${accountNumber}|${formatDate(new Date())}\n`;
+        
         // Para cada registro (linha) na planilha
         spreadsheetData.forEach((rowData, index) => {
             // Número da linha começa em 2 e incrementa
@@ -1333,6 +1364,26 @@ document.addEventListener('DOMContentLoaded', function() {
         
         return true;
     }
+
+    // Adicionar evento para esconder a mensagem de erro quando o usuário começar a digitar
+    document.getElementById('accountNumber')?.addEventListener('input', function() {
+        document.getElementById('accountError')?.classList.add('hidden');
+    });
+
+    // Adicionar estilos para o novo campo
+    const accountStyles = `
+        #accountNumber:focus {
+            border-color: #3b82f6;
+        }
+        
+        #accountError {
+            white-space: nowrap;
+            font-size: 0.75rem;
+        }
+    `;
+
+    // Adicionar os novos estilos ao elemento style existente
+    style.textContent += accountStyles;
 
     // Inicializar a planilha
     initSpreadsheet();
