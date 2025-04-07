@@ -635,16 +635,38 @@ document.addEventListener('DOMContentLoaded', function() {
         if (accountError) accountError.classList.add('hidden');
         let fileContent = '';
         
-        // Usar o número da conta dinâmico no cabeçalho
+        // Remover resumo anterior se existir
+        const existingTotalsInfo = document.getElementById('totalsInfo');
+        if (existingTotalsInfo) {
+            existingTotalsInfo.remove();
+        }
+
+        // Contadores para cada tipo de registro
+        const totals = {
+            N: 0, // Nova Adesão Titular
+            D: 0, // Novo Dependente
+            C: 0, // Cancelamento
+            I: 0, // Inclusão de Dependente
+            E: 0, // Exclusão de Dependente
+            U: 0, // Movimentação de Plano (Upgrade)
+            A: 0  // Alteração de Dados Cadastrais
+        };
+        
+        // Adicionar cabeçalho (conta como 1 registro no total)
         fileContent += `1|H|MOVIMENTACAO|${accountNumber}|${formatDate(new Date())}\n`;
         
-        // Para cada registro (linha) na planilha
+        // Processar registros e contar cada tipo
         spreadsheetData.forEach((rowData, index) => {
-            // Número da linha começa em 2 e incrementa
             const lineNumber = index + 2;
+            const tipoRegistro = rowData.tipoRegistro || 'N';
             
-            // Linha de detalhes
-            fileContent += `${lineNumber}|${rowData.tipoRegistro || 'N'}|` +
+            // Incrementar o contador do tipo correspondente
+            if (totals.hasOwnProperty(tipoRegistro)) {
+                totals[tipoRegistro]++;
+            }
+
+            // Adicionar linha de detalhe
+            fileContent += `${lineNumber}|${tipoRegistro}|` +
                 `${rowData.plano || ''}|` +
                 `${rowData.codigoBeneficiario || ''}|` +
                 `${rowData.nomeCompleto || ''}|` +
@@ -705,13 +727,46 @@ document.addEventListener('DOMContentLoaded', function() {
                 `${rowData.emBranco2 || ''}|\n`;
         });
         
-        // Rodapé (linha após o último registro)
-        const lastLineNumber = spreadsheetData.length + 2;
-        fileContent += `${lastLineNumber}|T|1|0|0|0|0|0|0|${lastLineNumber}`;
+        // Calcular total de registros (header + registros + trailer)
+        const totalRegistros = spreadsheetData.length + 2; // +2 para header e trailer
+        
+        // Adicionar linha de trailer com os totais corretos
+        fileContent += `${totalRegistros}|T|` +
+            `${totals.N}|` +   // Total de registros "N"
+            `${totals.D}|` +   // Total de registros "D"
+            `${totals.C}|` +   // Total de registros "C"
+            `${totals.I}|` +   // Total de registros "I"
+            `${totals.E}|` +   // Total de registros "E"
+            `${totals.U}|` +   // Total de registros "U"
+            `${totals.A}|` +   // Total de registros "A"
+            `${totalRegistros}`; // Total geral de registros
         
         output.textContent = fileContent;
         btnCopy.classList.remove('hidden');
         btnDownload.classList.remove('hidden');
+        
+        // Criar elemento para mostrar os totais
+        const totalsInfo = document.createElement('div');
+        totalsInfo.id = 'totalsInfo'; // Adicionar ID para fácil referência
+        totalsInfo.className = 'mt-4 p-4 bg-gray-50 rounded-lg border border-gray-200';
+        totalsInfo.innerHTML = `
+            <h3 class="text-sm font-semibold text-gray-700 mb-2">Resumo dos Registros</h3>
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+                ${Object.entries(totals).map(([tipo, total]) => `
+                    <div class="bg-white p-2 rounded shadow-sm">
+                        <div class="text-xs text-gray-500">Tipo ${tipo}</div>
+                        <div class="text-lg font-semibold">${total}</div>
+                    </div>
+                `).join('')}
+                <div class="bg-indigo-50 p-2 rounded shadow-sm">
+                    <div class="text-xs text-indigo-600">Total Geral</div>
+                    <div class="text-lg font-semibold">${totalRegistros}</div>
+                </div>
+            </div>
+        `;
+
+        // Inserir o elemento de totais após o output
+        output.parentNode.insertBefore(totalsInfo, output.nextSibling);
         
         // Rolagem automática para a pré-visualização
         output.scrollIntoView({ behavior: 'smooth' });
@@ -1011,7 +1066,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 document.body.appendChild(a);
                 a.click();
                 window.URL.revokeObjectURL(url);
-                document.body.removeChild(a);
                 
                 showAlert('Layout baixado com sucesso!', 'success');
             })
@@ -1033,7 +1087,6 @@ document.addEventListener('DOMContentLoaded', function() {
                         document.body.appendChild(a);
                         a.click();
                         window.URL.revokeObjectURL(url);
-                        document.body.removeChild(a);
                         
                         showAlert('Layout baixado com sucesso!', 'success');
                     })
@@ -1384,6 +1437,42 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Adicionar os novos estilos ao elemento style existente
     style.textContent += accountStyles;
+
+    // Adicionar estilos para o resumo dos registros
+    const totalsStyles = `
+        .grid {
+            display: grid;
+        }
+        
+        @media (min-width: 768px) {
+            .md\\:grid-cols-4 {
+                grid-template-columns: repeat(4, 1fr);
+            }
+        }
+        
+        .gap-3 {
+            gap: 0.75rem;
+        }
+        
+        .bg-indigo-50 {
+            background-color: #eef2ff;
+        }
+        
+        .text-indigo-600 {
+            color: #4f46e5;
+        }
+        
+        .shadow-sm {
+            box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+        }
+        
+        .font-semibold {
+            font-weight: 600;
+        }
+    `;
+
+    // Adicionar os novos estilos ao elemento style existente
+    style.textContent += totalsStyles;
 
     // Inicializar a planilha
     initSpreadsheet();
