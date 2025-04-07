@@ -735,6 +735,122 @@ document.addEventListener('DOMContentLoaded', function() {
     // Adicionar os estilos ao elemento style existente
     style.textContent += modalStyles;
 
+    // Criar botão de download do layout
+    const btnDownloadLayout = document.createElement('button');
+    btnDownloadLayout.className = 'ml-4 inline-flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-colors';
+    btnDownloadLayout.innerHTML = `
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
+            <path fill-rule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clip-rule="evenodd"/>
+        </svg>
+        Layout do Arquivo
+    `;
+
+    // Adicionar tooltip
+    btnDownloadLayout.title = 'Baixar arquivo de layout com instruções';
+
+    // Adicionar evento de clique
+    btnDownloadLayout.addEventListener('click', function() {
+        const layoutFilePath = 'src/Layout Padrao Movimentação Cadastral.xlsx';
+        
+        fetch(layoutFilePath)
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Arquivo não encontrado');
+                }
+                return response.blob();
+            })
+            .then(blob => {
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'Layout Padrao Movimentação Cadastral.xlsx';
+                document.body.appendChild(a);
+                a.click();
+                window.URL.revokeObjectURL(url);
+                document.body.removeChild(a);
+                
+                showAlert('Layout baixado com sucesso!', 'success');
+            })
+            .catch(error => {
+                // Tentar caminho alternativo se o primeiro falhar
+                const alternativePath = './src/Layout Padrao Movimentação Cadastral.xlsx';
+                fetch(alternativePath)
+                    .then(response => {
+                        if (!response.ok) {
+                            throw new Error('Arquivo não encontrado');
+                        }
+                        return response.blob();
+                    })
+                    .then(blob => {
+                        const url = window.URL.createObjectURL(blob);
+                        const a = document.createElement('a');
+                        a.href = url;
+                        a.download = 'Layout Padrao Movimentação Cadastral.xlsx';
+                        document.body.appendChild(a);
+                        a.click();
+                        window.URL.revokeObjectURL(url);
+                        document.body.removeChild(a);
+                        
+                        showAlert('Layout baixado com sucesso!', 'success');
+                    })
+                    .catch(err => {
+                        console.error('Erro ao baixar o layout:', err);
+                        showAlert('Erro ao baixar o layout. Por favor, verifique se o arquivo existe em src/Layout Padrao Movimentação Cadastral.xlsx', 'error');
+                    });
+            });
+    });
+
+    // Encontrar o título e criar um container flex
+    const title = document.querySelector('h1');
+    if (title) {
+        // Criar um container flex para o título e o botão
+        const headerContainer = document.createElement('div');
+        headerContainer.className = 'flex items-center mb-4';
+        
+        // Mover o título para dentro do container
+        title.parentNode.insertBefore(headerContainer, title);
+        headerContainer.appendChild(title);
+        
+        // Adicionar o botão ao container
+        headerContainer.appendChild(btnDownloadLayout);
+    }
+
+    // Adicionar estilos para o botão
+    const layoutButtonStyles = `
+        .header-container {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+        
+        @media (max-width: 640px) {
+            .header-container {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 0.5rem;
+            }
+            
+            .download-layout-btn {
+                margin-left: 0;
+                margin-top: 0.5rem;
+            }
+        }
+    `;
+
+    // Adicionar os novos estilos ao elemento style existente
+    style.textContent += layoutButtonStyles;
+
+    // Ajustar o estilo do container de saída para garantir que não haja sobreposição
+    const outputStyles = `
+        #output {
+            margin-top: 4rem;
+            padding-bottom: 5rem;
+        }
+    `;
+
+    style.textContent += outputStyles;
+
     // Inicializar a planilha
     initSpreadsheet();
 });
