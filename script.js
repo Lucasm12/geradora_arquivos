@@ -90,6 +90,7 @@ document.addEventListener('DOMContentLoaded', function() {
     let activeCell = null;
     let spreadsheetData = [];
     let selectedTipoRegistro = '';
+    let defaultTipoRegistro = '';
 
     // Inicialização
     function initSpreadsheet() {
@@ -137,19 +138,13 @@ document.addEventListener('DOMContentLoaded', function() {
                     headerSelect.appendChild(optionElement);
                 });
                 
-                // Evento de mudança para atualizar todas as linhas
+                // Evento de mudança para o select do cabeçalho
                 headerSelect.addEventListener('change', function() {
                     const selectedValue = this.value;
-                    selectedTipoRegistro = selectedValue;
-                    
-                    // Atualizar todas as linhas com o valor selecionado
-                    spreadsheetData.forEach((data, index) => {
-                        data[field.id] = selectedValue;
-                    });
-                    // Atualizar todos os inputs nas linhas
-                    document.querySelectorAll(`input[data-field-id="${field.id}"]`).forEach(input => {
-                        input.value = selectedValue;
-                    });
+                    if (selectedValue) {
+                        showChoiceDialog(selectedValue, 0, field.id);
+                    }
+                    // Não resetar o valor do select para manter a seleção visível
                 });
                 
                 headerWrapper.appendChild(headerSelect);
@@ -173,10 +168,10 @@ document.addEventListener('DOMContentLoaded', function() {
         
         // Criar objeto para armazenar dados da linha
         fields.forEach(field => {
-            if (field.id === 'tipoRegistro' && selectedTipoRegistro) {
-                rowData[field.id] = selectedTipoRegistro;
+            if (field.id === 'tipoRegistro') {
+                rowData[field.id] = defaultTipoRegistro || '';
             } else {
-                rowData[field.id] = '';
+            rowData[field.id] = '';
             }
         });
         
@@ -189,17 +184,14 @@ document.addEventListener('DOMContentLoaded', function() {
         const row = document.createElement('tr');
         row.dataset.rowId = rowId;
         
-        // Coluna de ações com botão de exclusão
+        // Coluna de ações
         const actionCell = document.createElement('td');
-        actionCell.className = 'row-actions p-2'; // Adicionar padding para área de clique maior
+        actionCell.className = 'row-actions';
         
         const deleteBtn = document.createElement('button');
-        deleteBtn.type = 'button'; // Explicitar que é um botão
         deleteBtn.innerHTML = '✕';
-        deleteBtn.className = 'delete-row-btn text-red-600 hover:text-red-800 text-sm p-2 rounded-full hover:bg-red-100 transition-colors focus:outline-none focus:ring-2 focus:ring-red-500';
+        deleteBtn.className = 'text-red-600 hover:text-red-800 text-sm p-2 rounded-full hover:bg-red-100 transition-colors';
         deleteBtn.title = 'Remover linha';
-        
-        // Adicionar o event listener diretamente com função anônima
         deleteBtn.onclick = function() {
             const currentRowId = parseInt(this.closest('tr').dataset.rowId);
             if (!isNaN(currentRowId)) {
@@ -213,8 +205,6 @@ document.addEventListener('DOMContentLoaded', function() {
         // Criar células para cada campo
         fields.forEach(field => {
             const cell = document.createElement('td');
-            
-            // Criar input para todos os campos (incluindo tipoRegistro)
             const input = document.createElement('input');
             input.type = 'text';
             input.className = 'cell-input';
@@ -223,16 +213,16 @@ document.addEventListener('DOMContentLoaded', function() {
             input.placeholder = field.name;
             
             // Definir o valor inicial
-            if (field.id === 'tipoRegistro' && selectedTipoRegistro) {
-                input.value = selectedTipoRegistro;
-            } else {
+            if (field.id === 'tipoRegistro') {
+                input.value = defaultTipoRegistro || '';
+                // Remover a classe bg-gray-100 e não desabilitar o input
+                input.className = 'cell-input'; // Mantém apenas a classe básica
+            } else if (field.id === 'sequencialRegistro') {
             input.value = rowData[field.id];
-            }
-            
-            // Desabilitar edição do campo sequencialRegistro e tipoRegistro
-            if (field.id === 'sequencialRegistro' || field.id === 'tipoRegistro') {
                 input.disabled = true;
                 input.classList.add('bg-gray-100');
+            } else {
+                input.value = rowData[field.id];
             }
             
             input.addEventListener('focus', function() {
@@ -247,59 +237,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 spreadsheetData[rowId][fieldId] = this.value.trim();
             });
             
-            input.addEventListener('keydown', function(e) {
-                if (e.key === 'Enter') {
-                    e.preventDefault();
-                    const nextCell = this.parentElement.nextElementSibling;
-                    if (nextCell) {
-                        const nextInput = nextCell.querySelector('.cell-input');
-                        if (nextInput) nextInput.focus();
-                    }
-                }
-                
-                // Navegação com setas
-                if (e.key === 'ArrowRight') {
-                    e.preventDefault();
-                    const nextCell = this.parentElement.nextElementSibling;
-                    if (nextCell) {
-                        const nextInput = nextCell.querySelector('.cell-input');
-                        if (nextInput) nextInput.focus();
-                    }
-                }
-                
-                if (e.key === 'ArrowLeft') {
-                    e.preventDefault();
-                    const prevCell = this.parentElement.previousElementSibling;
-                    if (prevCell) {
-                        const prevInput = prevCell.querySelector('.cell-input');
-                        if (prevInput) prevInput.focus();
-                    }
-                }
-                
-                if (e.key === 'ArrowDown') {
-                    e.preventDefault();
-                    const nextRow = this.closest('tr').nextElementSibling;
-                    if (nextRow) {
-                        const sameCellIndex = Array.from(this.parentElement.parentElement.children).indexOf(this.parentElement);
-                        const inputs = nextRow.querySelectorAll('.cell-input');
-                        if (inputs.length > sameCellIndex) {
-                            inputs[sameCellIndex].focus();
-                        }
-                    }
-                }
-                
-                if (e.key === 'ArrowUp') {
-                    e.preventDefault();
-                    const prevRow = this.closest('tr').previousElementSibling;
-                    if (prevRow) {
-                        const sameCellIndex = Array.from(this.parentElement.parentElement.children).indexOf(this.parentElement);
-                        const inputs = prevRow.querySelectorAll('.cell-input');
-                        if (inputs.length > sameCellIndex) {
-                            inputs[sameCellIndex].focus();
-                        }
-                    }
-                }
-            });
+            input.addEventListener('keydown', handleKeyNavigation);
             
             cell.appendChild(input);
             row.appendChild(cell);
@@ -307,9 +245,53 @@ document.addEventListener('DOMContentLoaded', function() {
         
         sheetBody.appendChild(row);
         
-        // Focar no primeiro campo da nova linha
-        const firstInput = row.querySelector('.cell-input');
-        if (firstInput) firstInput.focus();
+        // Focar no primeiro campo editável da nova linha
+        const firstEditableInput = row.querySelector('input:not([disabled])');
+        if (firstEditableInput) firstEditableInput.focus();
+        
+        // Debug: verificar dados após adicionar nova linha
+        console.log('Estado atual dos dados:', JSON.parse(JSON.stringify(spreadsheetData)));
+    }
+
+    // Função auxiliar para navegação com teclas
+    function handleKeyNavigation(e) {
+        if (e.key === 'Enter' || e.key.startsWith('Arrow')) {
+                    e.preventDefault();
+            
+            const currentCell = e.target.parentElement;
+            let targetCell;
+            
+            switch (e.key) {
+                case 'Enter':
+                case 'ArrowRight':
+                    targetCell = currentCell.nextElementSibling;
+                    break;
+                case 'ArrowLeft':
+                    targetCell = currentCell.previousElementSibling;
+                    break;
+                case 'ArrowDown':
+                    const nextRow = currentCell.parentElement.nextElementSibling;
+                    if (nextRow) {
+                        const cellIndex = Array.from(currentCell.parentElement.children).indexOf(currentCell);
+                        targetCell = nextRow.children[cellIndex];
+                    }
+                    break;
+                case 'ArrowUp':
+                    const prevRow = currentCell.parentElement.previousElementSibling;
+                    if (prevRow) {
+                        const cellIndex = Array.from(currentCell.parentElement.children).indexOf(currentCell);
+                        targetCell = prevRow.children[cellIndex];
+                    }
+                    break;
+            }
+            
+            if (targetCell) {
+                const input = targetCell.querySelector('input, select');
+                if (input && !input.disabled) {
+                    input.focus();
+                }
+            }
+        }
     }
 
     // Função para criar modal de confirmação
@@ -357,33 +339,33 @@ document.addEventListener('DOMContentLoaded', function() {
         showConfirmDialog('Tem certeza que deseja remover este registro?', function() {
             try {
                 // Remover da estrutura de dados
-                spreadsheetData.splice(rowId, 1);
+            spreadsheetData.splice(rowId, 1);
                 
                 // Remover o elemento da tabela
                 const rowToRemove = document.querySelector(`tr[data-row-id="${rowId}"]`);
                 if (rowToRemove) {
                     rowToRemove.remove();
                 }
-                
-                // Atualizar IDs das linhas restantes e números sequenciais
-                const rows = sheetBody.querySelectorAll('tr');
-                rows.forEach((row, index) => {
-                    row.dataset.rowId = index;
+            
+            // Atualizar IDs das linhas restantes e números sequenciais
+            const rows = sheetBody.querySelectorAll('tr');
+            rows.forEach((row, index) => {
+                row.dataset.rowId = index;
                     const inputs = row.querySelectorAll('.cell-input');
                     inputs.forEach(input => {
-                        input.dataset.rowId = index;
-                        if (input.dataset.fieldId === 'sequencialRegistro') {
-                            input.value = (index + 1).toString();
-                            spreadsheetData[index].sequencialRegistro = (index + 1).toString();
-                        }
-                    });
+                    input.dataset.rowId = index;
+                    if (input.dataset.fieldId === 'sequencialRegistro') {
+                        input.value = (index + 1).toString();
+                        spreadsheetData[index].sequencialRegistro = (index + 1).toString();
+                    }
                 });
+            });
                 
                 showAlert('Registro removido com sucesso', 'success');
             } catch (error) {
                 console.error('Erro ao remover linha:', error);
                 showAlert('Erro ao remover o registro', 'error');
-            }
+        }
         });
     }
 
@@ -391,9 +373,9 @@ document.addEventListener('DOMContentLoaded', function() {
     function generateFile() {
         let fileContent = '';
         
-        // Cabeçalho (linha 1)
-        fileContent += `1|H|MOVIMENTACAO|2|${formatDate(new Date())}\n`;
-        
+                // Cabeçalho (linha 1)
+                fileContent += `1|H|MOVIMENTACAO|2|${formatDate(new Date())}\n`;
+                
         // Para cada registro (linha) na planilha
         spreadsheetData.forEach((rowData, index) => {
             // Número da linha começa em 2 e incrementa
@@ -548,7 +530,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Event Listeners
     if (btnGenerate) {
-        btnGenerate.addEventListener('click', generateFile);
+    btnGenerate.addEventListener('click', generateFile);
     }
 
     if (btnAddRow) {
@@ -850,6 +832,108 @@ document.addEventListener('DOMContentLoaded', function() {
     `;
 
     style.textContent += outputStyles;
+
+    // Função para mostrar modal de escolha
+    function showChoiceDialog(selectedValue, rowId, fieldId) {
+        const modal = document.createElement('div');
+        modal.className = 'fixed inset-0 z-50 flex items-center justify-center';
+        modal.innerHTML = `
+            <div class="fixed inset-0 bg-black bg-opacity-50"></div>
+            <div class="relative bg-white rounded-lg shadow-xl p-6 max-w-sm w-full mx-4 z-10">
+                <h3 class="text-lg font-medium text-gray-900 mb-4">Aplicar alteração</h3>
+                <p class="text-sm text-gray-500 mb-6">Como você deseja aplicar esta alteração?</p>
+                <div class="flex flex-col gap-3">
+                    <button type="button" class="current-row-btn w-full px-4 py-2 text-sm font-medium text-blue-700 bg-blue-100 hover:bg-blue-200 rounded-md transition-colors text-left">
+                        Apenas na próxima linha vazia
+                    </button>
+                    <button type="button" class="all-rows-btn w-full px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-md transition-colors text-left">
+                        Em todas as linhas
+                    </button>
+                    <button type="button" class="cancel-btn w-full px-4 py-2 text-sm font-medium text-red-700 bg-red-100 hover:bg-red-200 rounded-md transition-colors text-left">
+                        Cancelar
+                    </button>
+                </div>
+            </div>
+        `;
+        
+        document.body.appendChild(modal);
+        
+        // Event listeners para os botões
+        modal.querySelector('.current-row-btn').onclick = () => {
+            // Aplicar apenas na próxima linha vazia
+            const emptyRow = findFirstEmptyRow();
+            if (emptyRow !== -1) {
+                const input = document.querySelector(`tr[data-row-id="${emptyRow}"] input[data-field-id="${fieldId}"]`);
+                if (input) {
+                    input.value = selectedValue;
+                    spreadsheetData[emptyRow][fieldId] = selectedValue;
+                }
+                showAlert('Alteração aplicada na próxima linha vazia', 'success');
+            } else {
+                // Se não encontrar linha vazia, criar uma nova
+                addNewRowWithType(selectedValue);
+                showAlert('Nova linha adicionada com o tipo selecionado', 'success');
+            }
+            modal.remove();
+        };
+        
+        modal.querySelector('.all-rows-btn').onclick = () => {
+            // Armazenar o tipo selecionado como padrão
+            defaultTipoRegistro = selectedValue;
+            
+            // Aplicar em todas as linhas existentes
+            spreadsheetData.forEach((data, index) => {
+                data[fieldId] = selectedValue;
+                const input = document.querySelector(`tr[data-row-id="${index}"] input[data-field-id="${fieldId}"]`);
+                if (input) {
+                    input.value = selectedValue;
+                }
+            });
+            
+            // Atualizar o select do cabeçalho para mostrar o valor selecionado
+            const headerSelect = document.querySelector('.header-select');
+            if (headerSelect) {
+                headerSelect.value = selectedValue;
+            }
+            
+            modal.remove();
+            showAlert('Alteração aplicada em todas as linhas e será aplicada em novos registros', 'success');
+        };
+        
+        modal.querySelector('.cancel-btn').onclick = () => {
+            modal.remove();
+        };
+        
+        // Fechar modal ao clicar no overlay
+        modal.querySelector('.bg-black').onclick = () => {
+            modal.remove();
+        };
+    }
+
+    // Função auxiliar para encontrar a primeira linha vazia
+    function findFirstEmptyRow() {
+        return spreadsheetData.findIndex(data => !data.tipoRegistro);
+    }
+
+    // Função para adicionar nova linha com tipo específico
+    function addNewRowWithType(selectedType) {
+        const rowId = spreadsheetData.length;
+        const rowData = {};
+        
+        fields.forEach(field => {
+            if (field.id === 'tipoRegistro') {
+                rowData[field.id] = selectedType;
+            } else {
+                rowData[field.id] = '';
+            }
+        });
+        
+        rowData.sequencialRegistro = (rowId + 1).toString();
+        spreadsheetData.push(rowData);
+        
+        // Criar e adicionar nova linha à tabela
+        addNewRow();
+    }
 
     // Inicializar a planilha
     initSpreadsheet();
