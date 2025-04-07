@@ -77,6 +77,9 @@ document.addEventListener('DOMContentLoaded', function() {
         { id: 'emBranco2', name: 'Em branco 2', description: 'Campo em branco 2' }
     ];
 
+    // Adicionar constante com os tipos válidos
+    const TIPOS_REGISTRO_VALIDOS = ['N', 'C', 'A', 'U', 'D', 'I', 'E'];
+
     // Elementos do DOM
     const headerRow = document.getElementById('headerRow');
     const sheetBody = document.getElementById('sheetBody');
@@ -215,8 +218,44 @@ document.addEventListener('DOMContentLoaded', function() {
             // Definir o valor inicial
             if (field.id === 'tipoRegistro') {
                 input.value = defaultTipoRegistro || '';
-                // Remover a classe bg-gray-100 e não desabilitar o input
-                input.className = 'cell-input'; // Mantém apenas a classe básica
+                input.maxLength = 1; // Limitar a 1 caractere
+                
+                // Adicionar validação para o campo tipo de registro
+                input.addEventListener('input', function(e) {
+                    let valor = e.target.value.toUpperCase();
+                    
+                    // Se o valor não estiver vazio, validar
+                    if (valor && !TIPOS_REGISTRO_VALIDOS.includes(valor)) {
+                        // Mostrar alerta de erro
+                        showAlert('Tipo de registro inválido. Use apenas: ' + TIPOS_REGISTRO_VALIDOS.join(', '), 'error');
+                        // Limpar o campo
+                        e.target.value = '';
+                        // Atualizar os dados
+                        const rowId = parseInt(e.target.dataset.rowId);
+                        spreadsheetData[rowId][field.id] = '';
+                        return;
+                    }
+                    
+                    // Manter sempre em maiúsculo
+                    e.target.value = valor;
+                    
+                    // Atualizar os dados
+                    const rowId = parseInt(e.target.dataset.rowId);
+                    spreadsheetData[rowId][field.id] = valor;
+                });
+                
+                // Adicionar tooltip com os valores válidos
+                input.title = 'Valores válidos: ' + TIPOS_REGISTRO_VALIDOS.join(', ') + '\n' +
+                             'N - Nova Adesão Titular\n' +
+                             'C - Cancelamento\n' +
+                             'A - Alteração de Dados Cadastrais\n' +
+                             'U - Movimentação de Plano (Upgrade)\n' +
+                             'D - Novo Dependente\n' +
+                             'I - Inclusão de Dependente\n' +
+                             'E - Exclusão de Dependente';
+                
+                // Adicionar classe para estilo específico
+                input.classList.add('tipo-registro-input');
             } else if (field.id === 'sequencialRegistro') {
             input.value = rowData[field.id];
                 input.disabled = true;
@@ -833,8 +872,35 @@ document.addEventListener('DOMContentLoaded', function() {
 
     style.textContent += outputStyles;
 
+    // Adicionar estilos específicos para o campo tipo de registro
+    const tipoRegistroStyles = `
+        .tipo-registro-input {
+            text-transform: uppercase;
+            font-weight: 600;
+            text-align: center;
+        }
+        
+        .tipo-registro-input:invalid {
+            border-color: #ef4444;
+            background-color: #fee2e2;
+        }
+        
+        .tipo-registro-input:hover {
+            cursor: help;
+        }
+    `;
+
+    // Adicionar os novos estilos ao elemento style existente
+    style.textContent += tipoRegistroStyles;
+
     // Função para mostrar modal de escolha
     function showChoiceDialog(selectedValue, rowId, fieldId) {
+        // Validar o valor selecionado
+        if (!TIPOS_REGISTRO_VALIDOS.includes(selectedValue)) {
+            showAlert('Tipo de registro inválido', 'error');
+            return;
+        }
+        
         const modal = document.createElement('div');
         modal.className = 'fixed inset-0 z-50 flex items-center justify-center';
         modal.innerHTML = `
