@@ -34,6 +34,16 @@
     box-shadow: inset 0 0 0 1px #90cdf4;
 }
 
+.invalid-cpf {
+    background-color: #fee2e2 !important;
+    border: 1px solid #ef4444 !important;
+}
+
+.cpf-input {
+    font-family: monospace;
+    letter-spacing: 1px;
+}
+
 .active-cell {
     background-color: #ebf8ff;
     box-shadow: inset 0 0 0 1px #63b3ed;

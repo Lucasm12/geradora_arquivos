@@ -472,6 +472,79 @@ document.addEventListener('DOMContentLoaded', function() {
             input.value = rowData[field.id];
                 input.disabled = true;
                 input.classList.add('bg-gray-100');
+            } else if (field.id === 'cpfBeneficiario') {
+                // Adicionar validação para o campo CPF
+                input.addEventListener('input', function(e) {
+                    // Remover todos os caracteres não numéricos
+                    let valor = this.value.replace(/[^\d]/g, '');
+                    
+                    // Limitar a 11 dígitos
+                    valor = valor.substring(0, 11);
+                    
+                    // Atualizar o valor do campo imediatamente
+                    this.value = valor;
+                    
+                    // Validar o CPF se tiver 11 dígitos
+                    if (valor.length === 11) {
+                        if (!validateCPF(valor)) {
+                            showAlert('CPF inválido!', 'error');
+                            this.classList.add('invalid-cpf');
+                        } else {
+                            this.classList.remove('invalid-cpf');
+                        }
+                    }
+                    
+                    // Atualizar os dados
+                    const rowId = parseInt(this.dataset.rowId);
+                    spreadsheetData[rowId][field.id] = valor;
+                });
+                
+                // Adicionar evento de paste para tratar colagem de CPF
+                input.addEventListener('paste', function(e) {
+                    e.preventDefault();
+                    let valor = (e.clipboardData || window.clipboardData).getData('text');
+                    valor = valor.replace(/[^\d]/g, '');
+                    valor = valor.substring(0, 11);
+                    this.value = valor;
+                    
+                    // Validar o CPF se tiver 11 dígitos
+                    if (valor.length === 11) {
+                        if (!validateCPF(valor)) {
+                            showAlert('CPF inválido!', 'error');
+                            this.classList.add('invalid-cpf');
+                        } else {
+                            this.classList.remove('invalid-cpf');
+                        }
+                    }
+                    
+                    // Atualizar os dados
+                    const rowId = parseInt(this.dataset.rowId);
+                    spreadsheetData[rowId][field.id] = valor;
+                });
+                
+                // Adicionar evento de blur para garantir que a conversão aconteça quando o campo perde o foco
+                input.addEventListener('blur', function(e) {
+                    let valor = this.value.replace(/[^\d]/g, '');
+                    valor = valor.substring(0, 11);
+                    this.value = valor;
+                    
+                    // Validar o CPF se tiver 11 dígitos
+                    if (valor.length === 11) {
+                        if (!validateCPF(valor)) {
+                            showAlert('CPF inválido!', 'error');
+                            this.classList.add('invalid-cpf');
+                        } else {
+                            this.classList.remove('invalid-cpf');
+                        }
+                    }
+                    
+                    // Atualizar os dados
+                    const rowId = parseInt(this.dataset.rowId);
+                    spreadsheetData[rowId][field.id] = valor;
+                });
+                
+                // Adicionar classe para estilo específico
+                input.classList.add('cpf-input');
             } else {
                 input.value = rowData[field.id];
             }
@@ -488,8 +561,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 spreadsheetData[rowId][fieldId] = this.value.trim();
             });
             
-            input.addEventListener('keydown', handleKeyNavigation);
-            
             cell.appendChild(input);
             row.appendChild(cell);
         });
@@ -502,47 +573,6 @@ document.addEventListener('DOMContentLoaded', function() {
         
         // Debug: verificar dados após adicionar nova linha
         console.log('Estado atual dos dados:', JSON.parse(JSON.stringify(spreadsheetData)));
-    }
-
-    // Função auxiliar para navegação com teclas
-    function handleKeyNavigation(e) {
-        if (e.key === 'Enter' || e.key.startsWith('Arrow')) {
-                    e.preventDefault();
-            
-            const currentCell = e.target.parentElement;
-            let targetCell;
-            
-            switch (e.key) {
-                case 'Enter':
-                case 'ArrowRight':
-                    targetCell = currentCell.nextElementSibling;
-                    break;
-                case 'ArrowLeft':
-                    targetCell = currentCell.previousElementSibling;
-                    break;
-                case 'ArrowDown':
-                    const nextRow = currentCell.parentElement.nextElementSibling;
-                    if (nextRow) {
-                        const cellIndex = Array.from(currentCell.parentElement.children).indexOf(currentCell);
-                        targetCell = nextRow.children[cellIndex];
-                    }
-                    break;
-                case 'ArrowUp':
-                    const prevRow = currentCell.parentElement.previousElementSibling;
-                    if (prevRow) {
-                        const cellIndex = Array.from(currentCell.parentElement.children).indexOf(currentCell);
-                        targetCell = prevRow.children[cellIndex];
-                    }
-                    break;
-            }
-            
-            if (targetCell) {
-                const input = targetCell.querySelector('input, select');
-                if (input && !input.disabled) {
-                    input.focus();
-                }
-            }
-        }
     }
 
     // Função para criar modal de confirmação
