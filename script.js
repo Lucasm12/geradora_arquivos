@@ -1,7 +1,7 @@
 document.addEventListener('DOMContentLoaded', function() {
     // Definição de todos os campos (apenas alguns exemplos - adicione todos)
     const fields = [
-        { id: 'sequencialRegistro', name: 'Seq.Registro', description: 'Sequencial de Registro' },
+        { id: 'sequencialRegistro', name: 'Seq.Registro', description: 'Número sequencial do registro dentro do arquivo' },
         { 
             id: 'tipoRegistro', 
             name: 'Tipo Reg.', 
@@ -17,64 +17,64 @@ document.addEventListener('DOMContentLoaded', function() {
                 { value: 'E', label: 'E', description: 'Exclusão de Dependente' }
             ]
         },
-        { id: 'plano', name: 'Plano', description: 'Plano' },
+        { id: 'plano', name: 'Plano', description: 'Código do plano adquirido pelo beneficiário' },
         { id: 'codigoBeneficiario', name: 'Cód.Benef.', description: 'Código do Beneficiário' },
-        { id: 'nomeCompleto', name: 'Nome Completo', description: 'Nome Completo' },
-        { id: 'cpfBeneficiario', name: 'CPF', description: 'CPF do Beneficiário' },
-        { id: 'rgRneBeneficiario', name: 'RG/RNE', description: 'RG/RNE do Beneficiário' },
-        { id: 'orgaoExpedidor', name: 'Órgão Exp.', description: 'Órgão Expedidor' },
-        { id: 'nomeMae', name: 'Nome Mãe', description: 'Nome da Mãe' },
-        { id: 'dataNascimento', name: 'Dt.Nasc.', description: 'Data Nascimento' },
+        { id: 'nomeCompleto', name: 'Nome Completo', description: 'Nome do beneficiário' },
+        { id: 'cpfBeneficiario', name: 'CPF', description: 'CPF do beneficiário (sem formatação) quando maior de 18 anos' },
+        { id: 'rgRneBeneficiario', name: 'RG/RNE', description: 'Número do RG quando beneficiário maior de 18 anos' },
+        { id: 'orgaoExpedidor', name: 'Órgão Exp.', description: 'Órgão expedidor do RG' },
+        { id: 'nomeMae', name: 'Nome Mãe', description: 'Nome da mãe' },
+        { id: 'dataNascimento', name: 'Dt.Nasc.', description: 'Formato DDMMAAAA' },
         { id: 'sexo', name: 'Sexo', description: 'Sexo' },
-        { id: 'cns', name: 'CNS', description: 'CNS' },
+        { id: 'cns', name: 'CNS', description: 'Código do Cartão Nacional de Saúde' },
         { id: 'estadoCivil', name: 'Est.Civil', description: 'Estado Civil' },
-        { id: 'logradouro', name: 'Logradouro', description: 'Logradouro' },
-        { id: 'numero', name: 'Número', description: 'Numero' },
-        { id: 'complemento', name: 'Complemento', description: 'Complemento' },
+        { id: 'logradouro', name: 'Logradouro', description: 'Endereço do beneficiário' },
+        { id: 'numero', name: 'Número', description: 'Numero do endereço' },
+        { id: 'complemento', name: 'Complemento', description: 'Complemento do endereço' },
         { id: 'bairro', name: 'Bairro', description: 'Bairro' },
         { id: 'cidade', name: 'Cidade', description: 'Cidade' },
-        { id: 'uf', name: 'UF', description: 'UF' },
+        { id: 'uf', name: 'UF', description: 'Estado' },
         { id: 'cep', name: 'CEP', description: 'CEP' },
         { id: 'tipoTelefone1', name: 'Tipo Tel.1', description: 'Tipo de Telefone 1' },
-        { id: 'dddTelefone1', name: 'DDD Tel.1', description: 'DDD Telefone 1' },
-        { id: 'telefone1', name: 'Telefone 1', description: 'Telefone 1' },
-        { id: 'ramalTelefone1', name: 'Ramal 1', description: 'Ramal Telefone 1' },
+        { id: 'dddTelefone1', name: 'DDD Tel.1', description: 'DDD do telefone 1' },
+        { id: 'telefone1', name: 'Telefone 1', description: 'Número do telefone 1 (sem formatação)' },
+        { id: 'ramalTelefone1', name: 'Ramal 1', description: 'Ramal do telefone 1' },
         { id: 'tipoTelefone2', name: 'Tipo Tel.2', description: 'Tipo de Telefone 2' },
-        { id: 'dddTelefone2', name: 'DDD Tel.2', description: 'DDD Telefone 2' },
-        { id: 'telefone2', name: 'Telefone 2', description: 'Telefone 2' },
-        { id: 'ramalTelefone2', name: 'Ramal 2', description: 'Ramal Telefone 2' },
-        { id: 'servidorPublico', name: 'Serv.Público', description: 'Servidor Publico' },
+        { id: 'dddTelefone2', name: 'DDD Tel.2', description: 'DDD do telefone 2' },
+        { id: 'telefone2', name: 'Telefone 2', description: 'Número do telefone 2' },
+        { id: 'ramalTelefone2', name: 'Ramal 2', description: 'Ramal do telefone 2' },
+        { id: 'servidorPublico', name: 'Serv.Público', description: 'Servidor Público' },
         { id: 'tipoMovimentacao', name: 'Tipo Mov.', description: 'Tipo de Movimentação' },
-        { id: 'valorMensalidade', name: 'Valor Mens.', description: 'Valor da Mensalidade' },
+        { id: 'valorMensalidade', name: 'Valor Mens.', description: 'Valor com 10 inteiros e 2 decimais' },
         { id: 'dataOperacao', name: 'Dt.Operação', description: 'Data da Operação' },
         { id: 'dataInicioVigencia', name: 'Dt.Início', description: 'Data de Inicio Vigência' },
         { id: 'motivoCancelamento', name: 'Motivo Canc.', description: 'Motivo de Cancelamento' },
         { id: 'formaPagamento', name: 'Forma Pag.', description: 'Forma de Pagamento' },
-        { id: 'banco', name: 'Banco', description: 'Banco' },
-        { id: 'agencia', name: 'Agência', description: 'Agencia' },
-        { id: 'contaCorrente', name: 'Conta', description: 'Conta Corrente' },
+        { id: 'banco', name: 'Banco', description: 'Código do banco' },
+        { id: 'agencia', name: 'Agência', description: 'Código da agência' },
+        { id: 'contaCorrente', name: 'Conta', description: 'Número da conta + dígito' },
         { id: 'tipoConta', name: 'Tipo Conta', description: 'Tipo de Conta' },
-        { id: 'codigoVendedor', name: 'Cód.Vendedor', description: 'Código do Vendedor' },
-        { id: 'codigoGerente', name: 'Cód.Gerente', description: 'Código do Gerente' },
-        { id: 'codigoLoja', name: 'Cód.Loja', description: 'Código da Loja' },
-        { id: 'codigoRegional', name: 'Cód.Regional', description: 'Código da Regional' },
-        { id: 'contrato', name: 'Contrato', description: 'Contrato' },
-        { id: 'locacao', name: 'Locação', description: 'Locacao' },
+        { id: 'codigoVendedor', name: 'Cód.Vendedor', description: 'Código do vendedor' },
+        { id: 'codigoGerente', name: 'Cód.Gerente', description: 'Código do gerente' },
+        { id: 'codigoLoja', name: 'Cód.Loja', description: 'Código da loja' },
+        { id: 'codigoRegional', name: 'Cód.Regional', description: 'Código da regional' },
+        { id: 'contrato', name: 'Contrato', description: 'Contrato do cliente' },
+        { id: 'locacao', name: 'Locação', description: 'Locação' },
         { id: 'email', name: 'E-mail', description: 'E-mail' },
-        { id: 'diaCobranca', name: 'Dia Cobr.', description: 'Dia Cobrança' },
+        { id: 'diaCobranca', name: 'Dia Cobr.', description: 'Dia do mês para cobrança' },
         { id: 'grauParentesco', name: 'Grau Parent.', description: 'Grau de parentesco' },
-        { id: 'vinculoCpfTitular', name: 'CPF Titular', description: 'Vinculo CPF Titular' },
-        { id: 'codigoBeneficiarioTitular', name: 'Cód.Ben.Titular', description: 'Código do Beneficiário Titular' },
-        { id: 'funcionalMatricula', name: 'Func/Matrícula', description: 'Funcional/Matricula' },
-        { id: 'centroCusto', name: 'Centro Custo', description: 'Centro de Custo' },
-        { id: 'carteirinha', name: 'Carteirinha', description: 'Carteirinha' },
-        { id: 'naturezaDocumentoIdentificacao', name: 'Nat.Doc.ID', description: 'Natureza Documento Identificação' },
-        { id: 'dataExpedicao', name: 'Dt.Expedição', description: 'Data Expedição' },
-        { id: 'passaporteCarteiraCivil', name: 'Passaporte', description: 'Passaporte Carteira Civil' },
-        { id: 'atividadePrincipalDesenvolvida', name: 'Atividade', description: 'Atividade Principal Desenvolvida' },
-        { id: 'idRegistroRemessa', name: 'ID Remessa', description: 'ID Registro Remessa' },
-        { id: 'emBranco1', name: 'Em branco 1', description: 'Campo em branco 1' },
-        { id: 'emBranco2', name: 'Em branco 2', description: 'Campo em branco 2' }
+        { id: 'vinculoCpfTitular', name: 'CPF Titular', description: 'CPF do titular (sem formatação)' },
+        { id: 'codigoBeneficiarioTitular', name: 'Cód.Ben.Titular', description: 'Código do beneficiário titular' },
+        { id: 'funcionalMatricula', name: 'Func/Matrícula', description: 'Número de identificação no parceiro' },
+        { id: 'centroCusto', name: 'Centro Custo', description: 'Centro de custo' },
+        { id: 'carteirinha', name: 'Carteirinha', description: 'Número da carteirinha' },
+        { id: 'naturezaDocumentoIdentificacao', name: 'Nat.Doc.ID', description: 'Tipo do documento' },
+        { id: 'dataExpedicao', name: 'Dt.Expedição', description: 'Data de expedição do documento' },
+        { id: 'passaporteCarteiraCivil', name: 'Passaporte', description: 'Passaporte ou carteira civil' },
+        { id: 'atividadePrincipalDesenvolvida', name: 'Atividade', description: 'Atividade principal' },
+        { id: 'informacaoAdicional1', name: 'Info.Adic.1', description: 'Campo adicional' },
+        { id: 'informacaoAdicional2', name: 'Info.Adic.2', description: 'Campo adicional' },
+        { id: 'informacaoAdicional3', name: 'Info.Adic.3', description: 'Campo adicional' }
     ];
 
     // Adicionar constante com os tipos válidos
@@ -173,7 +173,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 { value: '2', label: 'Solteiro' },
                 { value: '3', label: 'Divorciado' },
                 { value: '4', label: 'Viúvo' },
-                { value: '5', label: 'Separado/Desquitado' },
+                { value: '5', label: 'Separado' },
                 { value: '6', label: 'Outros' }
             ]
         },
@@ -182,73 +182,72 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Definir as descrições dos tooltips para cada campo
     const FIELD_TOOLTIPS = {
-        sequencialRegistro: 'Número sequencial do registro dentro do arquivo (gerado automaticamente)',
+        sequencialRegistro: 'Número sequencial do registro dentro do arquivo',
         tipoRegistro: 'Tipos válidos:\n' +
-                             'N - Nova Adesão Titular\n' +
-                             'C - Cancelamento\n' +
-                             'A - Alteração de Dados Cadastrais\n' +
-                             'U - Movimentação de Plano (Upgrade)\n' +
-                             'D - Novo Dependente\n' +
-                             'I - Inclusão de Dependente\n' +
+                     'N - Nova Adesão Titular\n' +
+                     'C - Cancelamento\n' +
+                     'A - Alteração de Dados Cadastrais\n' +
+                     'U - Movimentação de Plano (Upgrade)\n' +
+                     'D - Novo Dependente\n' +
+                     'I - Inclusão de Dependente\n' +
                      'E - Exclusão de Dependente',
         plano: 'Código do plano adquirido pelo beneficiário',
-        codigoBeneficiario: 'Código do beneficiário',
-        nomeCompleto: 'Nome completo do beneficiário',
-        cpfBeneficiario: 'CPF do beneficiário (somente números)\nObrigatório se maior de 18 anos',
+        codigoBeneficiario: 'Código do Beneficiário',
+        nomeCompleto: 'Nome do beneficiário',
+        cpfBeneficiario: 'CPF do beneficiário (sem formatação)\nObrigatório se maior de 18 anos',
         rgRneBeneficiario: 'Número do RG (obrigatório se maior de 18 anos)',
-        orgaoExpedidor: 'Órgão expedidor do RG (obrigatório se maior de 18 anos)',
-        nomeMae: 'Nome completo da mãe do beneficiário',
+        orgaoExpedidor: 'Órgão expedidor do RG',
+        nomeMae: 'Nome da mãe',
         dataNascimento: 'Data de nascimento no formato DDMMAAAA\nExemplo: 25121990',
         sexo: 'Códigos válidos:\n1 - Masculino\n3 - Feminino',
         cns: 'Código do Cartão Nacional de Saúde',
         estadoCivil: 'Códigos válidos:\n' +
-                     '1 - Casado\n' +
-                     '2 - Solteiro\n' +
-                     '3 - Divorciado\n' +
-                     '4 - Viúvo\n' +
-                     '5 - Separado/Desquitado\n' +
-                     '6 - Outros',
-        logradouro: 'Endereço do beneficiário titular',
+                    '1 - Casado\n' +
+                    '2 - Solteiro\n' +
+                    '3 - Divorciado\n' +
+                    '4 - Viúvo\n' +
+                    '5 - Separado\n' +
+                    '6 - Outros',
+        logradouro: 'Endereço do beneficiário',
         numero: 'Número do endereço',
         complemento: 'Complemento do endereço',
-        bairro: 'Bairro do beneficiário titular',
-        cidade: 'Cidade do beneficiário titular',
-        uf: 'Estado do beneficiário titular (sigla)',
-        cep: 'CEP sem formatação (somente números)',
+        bairro: 'Bairro',
+        cidade: 'Cidade',
+        uf: 'Estado',
+        cep: 'CEP',
         tipoTelefone1: 'Códigos válidos:\n' +
-                       '1 - Residência\n' +
-                       '2 - Comercial\n' +
-                       '3 - Celular\n' +
-                       '4 - Fax',
-        dddTelefone1: 'DDD do telefone (2 dígitos)',
-        telefone1: 'Número do telefone (somente números)',
-        ramalTelefone1: 'Número do ramal (se houver)',
+                      '1 - Residência\n' +
+                      '2 - Comercial\n' +
+                      '3 - Celular',
+        dddTelefone1: 'DDD do telefone 1',
+        telefone1: 'Número do telefone 1 (sem formatação)',
+        ramalTelefone1: 'Ramal do telefone 1',
         tipoTelefone2: 'Mesmo formato do Telefone 1',
         dddTelefone2: 'DDD do telefone 2',
         telefone2: 'Número do telefone 2',
-        ramalTelefone2: 'Número do ramal 2 (se houver)',
-        servidorPublico: 'Códigos válidos:\n1 - Pessoa Física\n2 - Pessoa Física Servidor Público',
+        ramalTelefone2: 'Ramal do telefone 2',
+        servidorPublico: 'Códigos válidos:\n1 - Pessoa Física\n2 - Servidor Público',
         tipoMovimentacao: 'Códigos válidos:\n1 - Normal\n2 - Retroativa',
         valorMensalidade: 'Valor com 10 inteiros e 2 decimais',
         dataOperacao: 'Data da operação no formato DDMMAAAA',
         dataInicioVigencia: 'Data de início da vigência no formato DDMMAAAA',
         motivoCancelamento: 'Códigos válidos:\n' +
-                           '1 - Voluntário com multa\n' +
-                           '2 - Voluntário sem multa\n' +
-                           '3 - Inadimplência\n' +
-                           '4 - Contratação Indevida\n' +
-                           '5 - Demissão\n' +
-                           '6 - Término Vigência\n' +
-                           '7 - Particular',
+                          '1 - Voluntário com Multa\n' +
+                          '2 - Voluntário sem Multa\n' +
+                          '3 - Inadimplência\n' +
+                          '4 - Contratação Indevida\n' +
+                          '5 - Demissão\n' +
+                          '6 - Término Vigência\n' +
+                          '7 - Particular',
         formaPagamento: 'Códigos válidos:\n' +
-                        '1 - Débito em Conta\n' +
-                        '2 - Cartão de Crédito\n' +
-                        '3 - Cartão PL\n' +
-                        '4 - Boleto\n' +
-                        '5 - Folha',
+                       '1 - Débito\n' +
+                       '2 - Cartão\n' +
+                       '3 - Cartão PL\n' +
+                       '4 - Boleto\n' +
+                       '5 - Folha',
         banco: 'Código do banco',
         agencia: 'Código da agência',
-        contaCorrente: 'Número da conta com dígito',
+        contaCorrente: 'Número da conta + dígito',
         tipoConta: 'Códigos válidos:\n1 - Corrente\n2 - Poupança',
         codigoVendedor: 'Código do vendedor',
         codigoGerente: 'Código do gerente',
@@ -256,30 +255,30 @@ document.addEventListener('DOMContentLoaded', function() {
         codigoRegional: 'Código da regional',
         contrato: 'Contrato do cliente',
         locacao: 'Locação',
-        email: 'E-mail (apenas para titular)',
-        diaCobranca: 'Dia escolhido para cobrança (ex: 05, 10, 15)',
+        email: 'E-mail',
+        diaCobranca: 'Dia do mês para cobrança',
         grauParentesco: 'Códigos válidos:\n' +
-                        '1 - Agregado\n' +
-                        '2 - Cônjuge\n' +
-                        '3 - Filho(a)\n' +
-                        '4 - Mãe\n' +
-                        '5 - Pai\n' +
-                        '6 - Tio(a)\n' +
-                        '7 - Enteado\n' +
-                        '8 - Irmão(ã)\n' +
-                        '9 - Avô(ó)',
-        vinculoCpfTitular: 'CPF do titular (somente números)',
-        codigoBeneficiarioTitular: 'Código do titular',
-        funcionalMatricula: 'Número de identificação do beneficiário no parceiro',
+                       '1 - Agregado\n' +
+                       '2 - Cônjuge\n' +
+                       '3 - Filho(a)\n' +
+                       '4 - Mãe\n' +
+                       '5 - Pai\n' +
+                       '6 - Tio(a)\n' +
+                       '7 - Enteado\n' +
+                       '8 - Irmão(ã)\n' +
+                       '9 - Avô(ó)',
+        vinculoCpfTitular: 'CPF do titular (sem formatação)',
+        codigoBeneficiarioTitular: 'Código do beneficiário titular',
+        funcionalMatricula: 'Número de identificação no parceiro',
         centroCusto: 'Centro de custo',
         carteirinha: 'Número da carteirinha',
-        naturezaDocumentoIdentificacao: 'Obrigatório quando:\n- Tipo for "D", "I" e maior de 18 anos\n- Sempre obrigatório para "N"',
-        dataExpedicao: 'Data de expedição do documento\nMesmo critério do campo anterior',
-        passaporteCarteiraCivil: 'Número do passaporte ou carteira civil',
-        atividadePrincipalDesenvolvida: 'Atividade principal desenvolvida',
-        idRegistroRemessa: 'Identificador único do registro no sistema do cliente (opcional)',
-        emBranco1: 'Campo em branco',
-        emBranco2: 'Campo em branco'
+        naturezaDocumentoIdentificacao: 'Tipo do documento',
+        dataExpedicao: 'Data de expedição do documento',
+        passaporteCarteiraCivil: 'Passaporte ou carteira civil',
+        atividadePrincipalDesenvolvida: 'Atividade principal',
+        informacaoAdicional1: 'Campo adicional',
+        informacaoAdicional2: 'Campo adicional',
+        informacaoAdicional3: 'Campo adicional'
     };
 
     // Inicialização
@@ -375,12 +374,23 @@ document.addEventListener('DOMContentLoaded', function() {
         const rowId = spreadsheetData.length;
         const rowData = {};
         
+        // Obter a data atual no formato DDMMAAAA
+        const hoje = new Date();
+        const dia = String(hoje.getDate()).padStart(2, '0');
+        const mes = String(hoje.getMonth() + 1).padStart(2, '0');
+        const ano = hoje.getFullYear();
+        const dataAtual = `${dia}${mes}${ano}`;
+        
         // Criar objeto para armazenar dados da linha
         fields.forEach(field => {
             if (field.id === 'tipoRegistro') {
                 rowData[field.id] = defaultTipoRegistro || '';
+            } else if (field.id === 'tipoMovimentacao') {
+                rowData[field.id] = '1'; // Valor padrão para tipo de movimentação
+            } else if (field.id === 'dataOperacao') {
+                rowData[field.id] = dataAtual; // Data atual no formato DDMMAAAA
             } else {
-            rowData[field.id] = '';
+                rowData[field.id] = '';
             }
         });
         
@@ -427,6 +437,144 @@ document.addEventListener('DOMContentLoaded', function() {
             // Adicionar classes para estilização do tooltip
             input.classList.add('tooltip-input');
             
+            // Adicionar evento de colagem específico para cada célula
+            input.addEventListener('paste', function(e) {
+                e.preventDefault();
+                
+                const clipboardData = e.clipboardData;
+                const pastedData = clipboardData.getData('text');
+                
+                // Se for o campo sequencial, não permitir colagem
+                if (field.id === 'sequencialRegistro') {
+                    return;
+                }
+                
+                // Verificar se os dados contêm tabulações (múltiplos campos)
+                if (pastedData.includes('\t')) {
+                    // Dividir os dados em linhas
+                    const rows = pastedData.split('\n')
+                        .map(row => row.trim())
+                        .filter(row => row !== '');
+                    
+                    // Para cada linha
+                    rows.forEach((row, rowIndex) => {
+                        // Dividir a linha em campos usando tabulação
+                        const fields = row.split('\t');
+                        
+                        // Pegar a linha atual ou criar uma nova
+                        let currentRowIndex = parseInt(this.closest('tr').dataset.rowId) + rowIndex;
+                        
+                        // Se precisar de mais linhas, adicionar
+                        while (currentRowIndex >= spreadsheetData.length) {
+                            addNewRow();
+                        }
+                        
+                        // Para cada campo na linha
+                        fields.forEach((value, fieldIndex) => {
+                            // Determinar qual campo estamos preenchendo
+                            let targetFieldId;
+                            
+                            // Mapear o índice do campo para o ID do campo
+                            // Assumindo que o primeiro campo é nome e o segundo é CPF
+                            if (fieldIndex === 0) {
+                                targetFieldId = 'nomeCompleto';
+                            } else if (fieldIndex === 1) {
+                                targetFieldId = 'cpfBeneficiario';
+                            } else if (fieldIndex === 2) {
+                                targetFieldId = 'dataNascimento';
+                            } else if (fieldIndex === 3) {
+                                targetFieldId = 'sexo';
+                            } else if (fieldIndex === 4) {
+                                targetFieldId = 'nomeMae';
+                            } else if (fieldIndex === 5) {
+                                targetFieldId = 'rgRneBeneficiario';
+                            } else if (fieldIndex === 6) {
+                                targetFieldId = 'orgaoExpedidor';
+                            } else if (fieldIndex === 7) {
+                                targetFieldId = 'estadoCivil';
+                            } else if (fieldIndex === 8) {
+                                targetFieldId = 'logradouro';
+                            } else if (fieldIndex === 9) {
+                                targetFieldId = 'numero';
+                            } else if (fieldIndex === 10) {
+                                targetFieldId = 'complemento';
+                            } else if (fieldIndex === 11) {
+                                targetFieldId = 'bairro';
+                            } else if (fieldIndex === 12) {
+                                targetFieldId = 'cidade';
+                            } else if (fieldIndex === 13) {
+                                targetFieldId = 'uf';
+                            } else if (fieldIndex === 14) {
+                                targetFieldId = 'cep';
+                            } else if (fieldIndex === 15) {
+                                targetFieldId = 'telefone1';
+                            } else if (fieldIndex === 16) {
+                                targetFieldId = 'dddTelefone1';
+                            } else if (fieldIndex === 17) {
+                                targetFieldId = 'telefone2';
+                            } else if (fieldIndex === 18) {
+                                targetFieldId = 'dddTelefone2';
+                            } else if (fieldIndex === 19) {
+                                targetFieldId = 'email';
+                            } else {
+                                // Se não houver mapeamento, usar o campo atual
+                                targetFieldId = field.id;
+                            }
+                            
+                            // Encontrar o input na linha correta
+                            const row = document.querySelector(`tr[data-row-id="${currentRowIndex}"]`);
+                            const input = row.querySelector(`input[data-field-id="${targetFieldId}"]`);
+                            
+                            if (input) {
+                                // Atualizar o valor
+                                input.value = value;
+                                spreadsheetData[currentRowIndex][targetFieldId] = value;
+                                
+                                // Se for CPF, disparar o evento de input para aplicar a formatação
+                                if (targetFieldId === 'cpfBeneficiario') {
+                                    const event = new Event('input', { bubbles: true });
+                                    input.dispatchEvent(event);
+                                }
+                            }
+                        });
+                    });
+                    
+                    return;
+                }
+                
+                // Código original para dados sem tabulação
+                // Dividir os dados em linhas e remover linhas vazias
+                const rows = pastedData.split('\n')
+                    .map(row => row.trim())
+                    .filter(row => row !== '');
+                
+                // Pegar a linha atual
+                let currentRow = this.closest('tr');
+                let rowIndex = parseInt(currentRow.dataset.rowId);
+                
+                // Para cada linha de dados
+                rows.forEach((value, index) => {
+                    // Se for a primeira linha, usar a linha atual
+                    if (index === 0) {
+                        this.value = value;
+                        spreadsheetData[rowIndex][field.id] = value;
+                    } else {
+                        // Para as próximas linhas, criar novas se necessário
+                        if (rowIndex + index >= spreadsheetData.length) {
+                            addNewRow();
+                        }
+                        
+                        // Encontrar o input na linha correta
+                        const row = document.querySelector(`tr[data-row-id="${rowIndex + index}"]`);
+                        const input = row.querySelector(`input[data-field-id="${field.id}"]`);
+                        
+                        // Atualizar o valor
+                        input.value = value;
+                        spreadsheetData[rowIndex + index][field.id] = value;
+                    }
+                });
+            });
+            
             // Definir o valor inicial
             if (field.id === 'tipoRegistro') {
                 input.value = defaultTipoRegistro || '';
@@ -469,9 +617,57 @@ document.addEventListener('DOMContentLoaded', function() {
                 // Adicionar classe para estilo específico
                 input.classList.add('tipo-registro-input');
             } else if (field.id === 'sequencialRegistro') {
-            input.value = rowData[field.id];
+                input.value = rowData[field.id];
                 input.disabled = true;
                 input.classList.add('bg-gray-100');
+            } else if (field.id === 'tipoMovimentacao') {
+                input.value = '1'; // Valor padrão para tipo de movimentação
+                input.maxLength = 1; // Limitar a 1 caractere
+                
+                // Adicionar validação para o campo tipo de movimentação
+                input.addEventListener('input', function(e) {
+                    let valor = e.target.value;
+                    
+                    // Se o valor não estiver vazio, validar
+                    if (valor && !['1', '2'].includes(valor)) {
+                        // Mostrar alerta de erro
+                        showAlert('Tipo de movimentação inválido. Use apenas: 1 - Normal, 2 - Retroativa', 'error');
+                        // Limpar o campo
+                        e.target.value = '1';
+                        // Atualizar os dados
+                        const rowId = parseInt(e.target.dataset.rowId);
+                        spreadsheetData[rowId][field.id] = '1';
+                        return;
+                    }
+                    
+                    // Atualizar os dados
+                    const rowId = parseInt(e.target.dataset.rowId);
+                    spreadsheetData[rowId][field.id] = valor;
+                });
+                
+                // Adicionar classe para estilo específico
+                input.classList.add('tipo-movimentacao-input');
+            } else if (field.id === 'dataOperacao') {
+                input.value = dataAtual; // Data atual no formato DDMMAAAA
+                input.maxLength = 8; // Limitar a 8 caracteres (DDMMAAAA)
+                
+                // Adicionar validação para o campo data de operação
+                input.addEventListener('input', function(e) {
+                    let valor = e.target.value.replace(/\D/g, ''); // Remover caracteres não numéricos
+                    
+                    // Limitar a 8 dígitos
+                    valor = valor.substring(0, 8);
+                    
+                    // Atualizar o valor do campo
+                    e.target.value = valor;
+                    
+                    // Atualizar os dados
+                    const rowId = parseInt(e.target.dataset.rowId);
+                    spreadsheetData[rowId][field.id] = valor;
+                });
+                
+                // Adicionar classe para estilo específico
+                input.classList.add('data-input');
             } else if (field.id === 'cpfBeneficiario') {
                 // Adicionar validação para o campo CPF
                 input.addEventListener('input', function(e) {
@@ -663,148 +859,229 @@ document.addEventListener('DOMContentLoaded', function() {
         }
         
         if (accountError) accountError.classList.add('hidden');
-        let fileContent = '';
         
-        // Remover resumo anterior se existir
-        const existingTotalsInfo = document.getElementById('totalsInfo');
-        if (existingTotalsInfo) {
-            existingTotalsInfo.remove();
-        }
-
-        // Contadores para cada tipo de registro
-        const totals = {
-            N: 0,
-            D: 0,
-            C: 0,
-            I: 0,
-            E: 0,
-            U: 0,
-            A: 0
-        };
+        // Verificar CPFs inválidos antes de gerar o arquivo
+        const invalidCPFs = [];
         
-        // Linha de cabeçalho
-        fileContent += `1|H|MOVIMENTACAO|${accountNumber}|${formatDate(new Date())}\n`;
-        
-        // Processar registros
         spreadsheetData.forEach((rowData, index) => {
-            const lineNumber = index + 2;
-            const tipoRegistro = rowData.tipoRegistro || 'N';
-            
-            if (totals.hasOwnProperty(tipoRegistro)) {
-                totals[tipoRegistro]++;
+            const cpf = rowData.cpfBeneficiario;
+            if (cpf && cpf.length === 11 && !validateCPF(cpf)) {
+                invalidCPFs.push({
+                    row: index + 1,
+                    cpf: cpf,
+                    nome: rowData.nomeCompleto || 'Sem nome'
+                });
             }
-
-            // Criar array com todos os 60 campos
-            const fields = [
-                lineNumber,                                    // 1
-                tipoRegistro,                                 // 2
-                rowData.plano || '',                          // 3
-                rowData.codigoBeneficiario || '',            // 4
-                rowData.nomeCompleto || '',                   // 5
-                rowData.cpfBeneficiario || '',               // 6
-                rowData.rgRneBeneficiario || '',             // 7
-                rowData.orgaoExpedidor || '',                // 8
-                rowData.nomeMae || '',                       // 9
-                rowData.dataNascimento || '',                // 10
-                rowData.sexo || '',                          // 11
-                rowData.cns || '',                           // 12
-                rowData.estadoCivil || '',                   // 13
-                rowData.logradouro || '',                    // 14
-                rowData.numero || '',                        // 15
-                rowData.complemento || '',                   // 16
-                rowData.bairro || '',                       // 17
-                rowData.cidade || '',                       // 18
-                rowData.uf || '',                           // 19
-                rowData.cep || '',                          // 20
-                rowData.tipoTelefone1 || '',                // 21
-                rowData.dddTelefone1 || '',                 // 22
-                rowData.telefone1 || '',                    // 23
-                rowData.ramalTelefone1 || '',               // 24
-                rowData.tipoTelefone2 || '',                // 25
-                rowData.dddTelefone2 || '',                 // 26
-                rowData.telefone2 || '',                    // 27
-                rowData.ramalTelefone2 || '',               // 28
-                rowData.servidorPublico || '',              // 29
-                rowData.tipoMovimentacao || '',             // 30
-                rowData.valorMensalidade || '',             // 31
-                rowData.dataOperacao || '',                 // 32
-                rowData.dataInicioVigencia || '',           // 33
-                rowData.motivoCancelamento || '',           // 34
-                rowData.formaPagamento || '',               // 35
-                rowData.banco || '',                        // 36
-                rowData.agencia || '',                      // 37
-                rowData.contaCorrente || '',                // 38
-                rowData.tipoConta || '',                    // 39
-                rowData.codigoVendedor || '',               // 40
-                rowData.codigoGerente || '',                // 41
-                rowData.codigoLoja || '',                   // 42
-                rowData.codigoRegional || '',               // 43
-                rowData.contrato || '',                     // 44
-                rowData.locacao || '',                      // 45
-                rowData.email || '',                        // 46
-                rowData.diaCobranca || '',                  // 47
-                rowData.grauParentesco || '',               // 48
-                rowData.vinculoCpfTitular || '',            // 49
-                rowData.codigoBeneficiarioTitular || '',    // 50
-                rowData.funcionalMatricula || '',           // 51
-                rowData.centroCusto || '',                  // 52
-                rowData.carteirinha || '',                  // 53
-                rowData.naturezaDocumentoIdentificacao || '', // 54
-                rowData.dataExpedicao || '',                // 55
-                rowData.passaporteCarteiraCivil || '',      // 56
-                rowData.atividadePrincipalDesenvolvida || '', // 57
-                rowData.idRegistroRemessa || '',            // 58
-                rowData.emBranco1 || '',                    // 59
-                rowData.emBranco2 || ''                     // 60
-            ];
-
-            // Adicionar linha com exatamente 60 campos
-            fileContent += fields.join('|') + '\n';
         });
         
-        // Calcular total de registros (header + registros + trailer)
-        const totalRegistros = spreadsheetData.length + 2;
-        
-        // Adicionar linha de trailer
-        fileContent += `${totalRegistros}|T|` +
-            `${totals.N}|` +
-            `${totals.D}|` +
-            `${totals.C}|` +
-            `${totals.I}|` +
-            `${totals.E}|` +
-            `${totals.U}|` +
-            `${totals.A}|` +
-            `${totalRegistros}`;
-        
-        output.textContent = fileContent;
-        btnCopy.classList.remove('hidden');
-        btnDownload.classList.remove('hidden');
-        
-        // Criar elemento para mostrar os totais
-        const totalsInfo = document.createElement('div');
-        totalsInfo.id = 'totalsInfo'; // Adicionar ID para fácil referência
-        totalsInfo.className = 'mt-4 p-4 bg-gray-50 rounded-lg border border-gray-200';
-        totalsInfo.innerHTML = `
-            <h3 class="text-sm font-semibold text-gray-700 mb-2">Resumo dos Registros</h3>
-            <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
-                ${Object.entries(totals).map(([tipo, total]) => `
-                    <div class="bg-white p-2 rounded shadow-sm">
-                        <div class="text-xs text-gray-500">Tipo ${tipo}</div>
-                        <div class="text-lg font-semibold">${total}</div>
+        // Se houver CPFs inválidos, mostrar alerta e perguntar se deseja prosseguir
+        if (invalidCPFs.length > 0) {
+            const cpfList = invalidCPFs.map(item => 
+                `Linha ${item.row}: ${item.nome} - CPF: ${item.cpf}`
+            ).join('\n');
+            
+            const message = `Foram encontrados ${invalidCPFs.length} CPF(s) inválido(s):\n\n${cpfList}\n\nDeseja gerar o arquivo mesmo assim?`;
+            
+            // Substituir o confirm padrão por um modal personalizado
+            return new Promise((resolve) => {
+                const modal = document.createElement('div');
+                modal.className = 'fixed inset-0 z-50 flex items-center justify-center';
+                modal.innerHTML = `
+                    <div class="fixed inset-0 bg-black bg-opacity-50"></div>
+                    <div class="relative bg-white rounded-lg shadow-xl p-6 max-w-2xl w-full mx-4 z-10">
+                        <h3 class="text-lg font-medium text-gray-900 mb-4">CPFs Inválidos Detectados</h3>
+                        <div class="bg-red-50 border border-red-200 rounded-md p-4 mb-6">
+                            <p class="text-red-700 mb-2">Foram encontrados ${invalidCPFs.length} CPF(s) inválido(s):</p>
+                            <div class="max-h-60 overflow-y-auto bg-white rounded border border-red-100 p-3">
+                                <pre class="text-sm text-red-600 whitespace-pre-wrap">${cpfList}</pre>
+                            </div>
+                        </div>
+                        <p class="text-gray-700 mb-6">Deseja gerar o arquivo mesmo assim?</p>
+                        <div class="flex justify-end gap-3">
+                            <button type="button" class="cancel-btn px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-md transition-colors">
+                                Cancelar
+                            </button>
+                            <button type="button" class="confirm-btn px-4 py-2 text-sm font-medium text-white bg-red-600 hover:bg-red-700 rounded-md transition-colors">
+                                Gerar Arquivo
+                            </button>
+                        </div>
                     </div>
-                `).join('')}
-                <div class="bg-indigo-50 p-2 rounded shadow-sm">
-                    <div class="text-xs text-indigo-600">Total Geral</div>
-                    <div class="text-lg font-semibold">${totalRegistros}</div>
-                </div>
-            </div>
-        `;
-
-        // Inserir o elemento de totais após o output
-        output.parentNode.insertBefore(totalsInfo, output.nextSibling);
+                `;
+                
+                document.body.appendChild(modal);
+                
+                // Event listeners para os botões do modal
+                modal.querySelector('.cancel-btn').onclick = () => {
+                    modal.remove();
+                    resolve(false);
+                };
+                
+                modal.querySelector('.confirm-btn').onclick = () => {
+                    modal.remove();
+                    resolve(true);
+                };
+                
+                // Fechar modal ao clicar no overlay
+                modal.querySelector('.bg-black').onclick = () => {
+                    modal.remove();
+                    resolve(false);
+                };
+            }).then(shouldProceed => {
+                if (shouldProceed) {
+                    // Continuar com a geração do arquivo
+                    generateFileContent();
+                }
+            });
+        }
         
-        // Rolagem automática para a pré-visualização
-        output.scrollIntoView({ behavior: 'smooth' });
+        // Função para gerar o conteúdo do arquivo
+        function generateFileContent() {
+            let fileContent = '';
+            
+            // Remover resumo anterior se existir
+            const existingTotalsInfo = document.getElementById('totalsInfo');
+            if (existingTotalsInfo) {
+                existingTotalsInfo.remove();
+            }
+            
+            // Contadores para cada tipo de registro
+            const totals = {
+                N: 0,
+                D: 0,
+                C: 0,
+                I: 0,
+                E: 0,
+                U: 0,
+                A: 0
+            };
+            
+            // Linha de cabeçalho
+            fileContent += `1|H|MOVIMENTACAO|${accountNumber}|${formatDate(new Date())}\n`;
+            
+            // Processar registros
+            spreadsheetData.forEach((rowData, index) => {
+                const lineNumber = index + 2;
+                const tipoRegistro = rowData.tipoRegistro || 'N';
+                
+                if (totals.hasOwnProperty(tipoRegistro)) {
+                    totals[tipoRegistro]++;
+                }
+
+                // Criar array com todos os 60 campos
+                const fields = [
+                    lineNumber,                                    // 1
+                    tipoRegistro,                                 // 2
+                    rowData.plano || '',                          // 3
+                    rowData.codigoBeneficiario || '',            // 4
+                    rowData.nomeCompleto || '',                   // 5
+                    rowData.cpfBeneficiario || '',               // 6
+                    rowData.rgRneBeneficiario || '',             // 7
+                    rowData.orgaoExpedidor || '',                // 8
+                    rowData.nomeMae || '',                       // 9
+                    rowData.dataNascimento || '',                // 10
+                    rowData.sexo || '',                          // 11
+                    rowData.cns || '',                           // 12
+                    rowData.estadoCivil || '',                   // 13
+                    rowData.logradouro || '',                    // 14
+                    rowData.numero || '',                        // 15
+                    rowData.complemento || '',                   // 16
+                    rowData.bairro || '',                       // 17
+                    rowData.cidade || '',                       // 18
+                    rowData.uf || '',                           // 19
+                    rowData.cep || '',                          // 20
+                    rowData.tipoTelefone1 || '',                // 21
+                    rowData.dddTelefone1 || '',                 // 22
+                    rowData.telefone1 || '',                    // 23
+                    rowData.ramalTelefone1 || '',               // 24
+                    rowData.tipoTelefone2 || '',                // 25
+                    rowData.dddTelefone2 || '',                 // 26
+                    rowData.telefone2 || '',                    // 27
+                    rowData.ramalTelefone2 || '',               // 28
+                    rowData.servidorPublico || '',              // 29
+                    rowData.tipoMovimentacao || '',             // 30
+                    rowData.valorMensalidade || '',             // 31
+                    rowData.dataOperacao || '',                 // 32
+                    rowData.dataInicioVigencia || '',           // 33
+                    rowData.motivoCancelamento || '',           // 34
+                    rowData.formaPagamento || '',               // 35
+                    rowData.banco || '',                        // 36
+                    rowData.agencia || '',                      // 37
+                    rowData.contaCorrente || '',                // 38
+                    rowData.tipoConta || '',                    // 39
+                    rowData.codigoVendedor || '',               // 40
+                    rowData.codigoGerente || '',                // 41
+                    rowData.codigoLoja || '',                   // 42
+                    rowData.codigoRegional || '',               // 43
+                    rowData.contrato || '',                     // 44
+                    rowData.locacao || '',                      // 45
+                    rowData.email || '',                        // 46
+                    rowData.diaCobranca || '',                  // 47
+                    rowData.grauParentesco || '',               // 48
+                    rowData.vinculoCpfTitular || '',            // 49
+                    rowData.codigoBeneficiarioTitular || '',    // 50
+                    rowData.funcionalMatricula || '',           // 51
+                    rowData.centroCusto || '',                  // 52
+                    rowData.carteirinha || '',                  // 53
+                    rowData.naturezaDocumentoIdentificacao || '', // 54
+                    rowData.dataExpedicao || '',                // 55
+                    rowData.passaporteCarteiraCivil || '',      // 56
+                    rowData.atividadePrincipalDesenvolvida || '', // 57
+                    rowData.informacaoAdicional1 || '',          // 58
+                    rowData.informacaoAdicional2 || '',          // 59
+                    rowData.informacaoAdicional3 || ''            // 60
+                ];
+
+                // Adicionar linha com exatamente 60 campos
+                fileContent += fields.join('|') + '\n';
+            });
+            
+            // Calcular total de registros (header + registros + trailer)
+            const totalRegistros = spreadsheetData.length + 2;
+            
+            // Adicionar linha de trailer
+            fileContent += `${totalRegistros}|T|` +
+                `${totals.N}|` +
+                `${totals.D}|` +
+                `${totals.C}|` +
+                `${totals.I}|` +
+                `${totals.E}|` +
+                `${totals.U}|` +
+                `${totals.A}|` +
+                `${totalRegistros}`;
+            
+            output.textContent = fileContent;
+            btnCopy.classList.remove('hidden');
+            btnDownload.classList.remove('hidden');
+            
+            // Criar elemento para mostrar os totais
+            const totalsInfo = document.createElement('div');
+            totalsInfo.id = 'totalsInfo'; // Adicionar ID para fácil referência
+            totalsInfo.className = 'mt-4 p-4 bg-gray-50 rounded-lg border border-gray-200';
+            totalsInfo.innerHTML = `
+                <h3 class="text-sm font-semibold text-gray-700 mb-2">Resumo dos Registros</h3>
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+                    ${Object.entries(totals).map(([tipo, total]) => `
+                        <div class="bg-white p-2 rounded shadow-sm">
+                            <div class="text-xs text-gray-500">Tipo ${tipo}</div>
+                            <div class="text-lg font-semibold">${total}</div>
+                        </div>
+                    `).join('')}
+                    <div class="bg-indigo-50 p-2 rounded shadow-sm">
+                        <div class="text-xs text-indigo-600">Total Geral</div>
+                        <div class="text-lg font-semibold">${totalRegistros}</div>
+                    </div>
+                </div>
+            `;
+
+            // Inserir o elemento de totais após o output
+            output.parentNode.insertBefore(totalsInfo, output.nextSibling);
+            
+            // Rolagem automática para a pré-visualização
+            output.scrollIntoView({ behavior: 'smooth' });
+        }
+        
+        // Iniciar a geração do arquivo
+        generateFileContent();
     }
 
     // Funções auxiliares
@@ -848,21 +1125,115 @@ document.addEventListener('DOMContentLoaded', function() {
             return;
         }
         
+        // Verificar se os dados contêm tabulações (múltiplos campos)
+        if (pastedData.includes('\t')) {
+            // Dividir os dados em linhas
+            const rows = pastedData.split('\n')
+                .map(row => row.trim())
+                .filter(row => row !== '');
+            
+            // Para cada linha
+            rows.forEach((row, rowIndex) => {
+                // Dividir a linha em campos usando tabulação
+                const fields = row.split('\t');
+                
+                // Pegar a linha atual ou criar uma nova
+                let currentRowIndex = parseInt(this.closest('tr').dataset.rowId) + rowIndex;
+                
+                // Se precisar de mais linhas, adicionar
+                while (currentRowIndex >= spreadsheetData.length) {
+                    addNewRow();
+                }
+                
+                // Para cada campo na linha
+                fields.forEach((value, fieldIndex) => {
+                    // Determinar qual campo estamos preenchendo
+                    let targetFieldId;
+                    
+                    // Mapear o índice do campo para o ID do campo
+                    // Assumindo que o primeiro campo é nome e o segundo é CPF
+                    if (fieldIndex === 0) {
+                        targetFieldId = 'nomeCompleto';
+                    } else if (fieldIndex === 1) {
+                        targetFieldId = 'cpfBeneficiario';
+                    } else if (fieldIndex === 2) {
+                        targetFieldId = 'dataNascimento';
+                    } else if (fieldIndex === 3) {
+                        targetFieldId = 'sexo';
+                    } else if (fieldIndex === 4) {
+                        targetFieldId = 'nomeMae';
+                    } else if (fieldIndex === 5) {
+                        targetFieldId = 'rgRneBeneficiario';
+                    } else if (fieldIndex === 6) {
+                        targetFieldId = 'orgaoExpedidor';
+                    } else if (fieldIndex === 7) {
+                        targetFieldId = 'estadoCivil';
+                    } else if (fieldIndex === 8) {
+                        targetFieldId = 'logradouro';
+                    } else if (fieldIndex === 9) {
+                        targetFieldId = 'numero';
+                    } else if (fieldIndex === 10) {
+                        targetFieldId = 'complemento';
+                    } else if (fieldIndex === 11) {
+                        targetFieldId = 'bairro';
+                    } else if (fieldIndex === 12) {
+                        targetFieldId = 'cidade';
+                    } else if (fieldIndex === 13) {
+                        targetFieldId = 'uf';
+                    } else if (fieldIndex === 14) {
+                        targetFieldId = 'cep';
+                    } else if (fieldIndex === 15) {
+                        targetFieldId = 'telefone1';
+                    } else if (fieldIndex === 16) {
+                        targetFieldId = 'dddTelefone1';
+                    } else if (fieldIndex === 17) {
+                        targetFieldId = 'telefone2';
+                    } else if (fieldIndex === 18) {
+                        targetFieldId = 'dddTelefone2';
+                    } else if (fieldIndex === 19) {
+                        targetFieldId = 'email';
+                    } else {
+                        // Se não houver mapeamento, usar o campo atual
+                        targetFieldId = field.id;
+                    }
+                    
+                    // Encontrar o input na linha correta
+                    const row = document.querySelector(`tr[data-row-id="${currentRowIndex}"]`);
+                    const input = row.querySelector(`input[data-field-id="${targetFieldId}"]`);
+                    
+                    if (input) {
+                        // Atualizar o valor
+                        input.value = value;
+                        spreadsheetData[currentRowIndex][targetFieldId] = value;
+                        
+                        // Se for CPF, disparar o evento de input para aplicar a formatação
+                        if (targetFieldId === 'cpfBeneficiario') {
+                            const event = new Event('input', { bubbles: true });
+                            input.dispatchEvent(event);
+                        }
+                    }
+                });
+            });
+            
+            return;
+        }
+        
+        // Código original para dados sem tabulação
         // Dividir os dados em linhas e remover linhas vazias
         const rows = pastedData.split('\n')
             .map(row => row.trim())
             .filter(row => row !== '');
         
         // Pegar a linha atual
-        let currentRow = targetInput.closest('tr');
+        let currentRow = this.closest('tr');
         let rowIndex = parseInt(currentRow.dataset.rowId);
         
         // Para cada linha de dados
         rows.forEach((value, index) => {
+            // Se for a primeira linha, usar a linha atual
             if (index === 0) {
-                // Para a primeira linha, usar a linha atual
-                targetInput.value = value;
-                spreadsheetData[rowIndex][targetFieldId] = value;
+                this.value = value;
+                spreadsheetData[rowIndex][field.id] = value;
             } else {
                 // Para as próximas linhas, criar novas se necessário
                 if (rowIndex + index >= spreadsheetData.length) {
@@ -871,11 +1242,11 @@ document.addEventListener('DOMContentLoaded', function() {
                 
                 // Encontrar o input na linha correta
                 const row = document.querySelector(`tr[data-row-id="${rowIndex + index}"]`);
-                const input = row.querySelector(`input[data-field-id="${targetFieldId}"]`);
+                const input = row.querySelector(`input[data-field-id="${field.id}"]`);
                 
                 // Atualizar o valor
                 input.value = value;
-                spreadsheetData[rowIndex + index][targetFieldId] = value;
+                spreadsheetData[rowIndex + index][field.id] = value;
             }
         });
     }
@@ -1076,7 +1447,7 @@ document.addEventListener('DOMContentLoaded', function() {
         <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
             <path fill-rule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clip-rule="evenodd"/>
         </svg>
-        Layout do Arquivo
+        Download do Layout
     `;
 
     // Adicionar tooltip
@@ -1084,52 +1455,75 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Adicionar evento de clique
     btnDownloadLayout.addEventListener('click', function() {
-        const layoutFilePath = 'src/Layout Padrao Movimentação Cadastral.xlsx';
+        // Redirecionar para o link do Google Sheets
+        window.open('https://docs.google.com/spreadsheets/d/1O-0UXFEwpq0MtPrtHT7a7lOZNVm3vRmX/edit?usp=drive_link&ouid=110128864082531091825&rtpof=true&sd=true', '_blank');
+    });
+
+    // Criar botão de layout vazio
+    const btnEmptyLayout = document.createElement('button');
+    btnEmptyLayout.className = 'ml-2 inline-flex items-center px-4 py-2 bg-green-600 hover:bg-green-700 text-white text-sm font-medium rounded-lg transition-colors';
+    btnEmptyLayout.innerHTML = `
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
+            <path fill-rule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clip-rule="evenodd"/>
+        </svg>
+        Layout Vazio
+    `;
+
+    // Adicionar tooltip
+    btnEmptyLayout.title = 'Baixar arquivo de layout vazio';
+
+    // Adicionar evento de clique
+    btnEmptyLayout.addEventListener('click', function() {
+        // Redirecionar para o link do Google Sheets
+        window.open('https://docs.google.com/spreadsheets/d/11bHil0n7yBZsSnYxnNu5Lb5XSDMfAKyN/edit?usp=drive_link&ouid=110128864082531091825&rtpof=true&sd=true', '_blank');
+    });
+
+    // Criar botão de upload
+    const btnUpload = document.createElement('button');
+    btnUpload.className = 'ml-2 inline-flex items-center px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white text-sm font-medium rounded-lg transition-colors';
+    btnUpload.innerHTML = `
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
+            <path fill-rule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clip-rule="evenodd"/>
+        </svg>
+        Fazer Upload
+    `;
+
+    // Adicionar tooltip
+    btnUpload.title = 'Fazer upload de arquivo';
+
+    // Adicionar evento de clique
+    btnUpload.addEventListener('click', function() {
+        // Criar um input de arquivo oculto
+        const fileInput = document.createElement('input');
+        fileInput.type = 'file';
+        fileInput.accept = '.xlsx,.xls,.csv';
+        fileInput.style.display = 'none';
         
-        fetch(layoutFilePath)
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error('Arquivo não encontrado');
-                }
-                return response.blob();
-            })
-            .then(blob => {
-                const url = window.URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = 'Layout Padrao Movimentação Cadastral.xlsx';
-                document.body.appendChild(a);
-                a.click();
-                window.URL.revokeObjectURL(url);
+        // Adicionar evento de mudança para processar o arquivo selecionado
+        fileInput.addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                // Aqui você pode adicionar a lógica para processar o arquivo
+                showAlert(`Arquivo "${file.name}" selecionado para upload`, 'success');
                 
-                showAlert('Layout baixado com sucesso!', 'success');
-            })
-            .catch(error => {
-                // Tentar caminho alternativo se o primeiro falhar
-                const alternativePath = './src/Layout Padrao Movimentação Cadastral.xlsx';
-                fetch(alternativePath)
-                    .then(response => {
-                        if (!response.ok) {
-                            throw new Error('Arquivo não encontrado');
-                        }
-                        return response.blob();
-                    })
-                    .then(blob => {
-                        const url = window.URL.createObjectURL(blob);
-                        const a = document.createElement('a');
-                        a.href = url;
-                        a.download = 'Layout Padrao Movimentação Cadastral.xlsx';
-                        document.body.appendChild(a);
-                        a.click();
-                        window.URL.revokeObjectURL(url);
-                        
-                        showAlert('Layout baixado com sucesso!', 'success');
-                    })
-                    .catch(err => {
-                        console.error('Erro ao baixar o layout:', err);
-                        showAlert('Erro ao baixar o layout. Por favor, verifique se o arquivo existe em src/Layout Padrao Movimentação Cadastral.xlsx', 'error');
-                    });
-            });
+                // Exemplo de como você poderia processar o arquivo:
+                // const reader = new FileReader();
+                // reader.onload = function(event) {
+                //     const data = event.target.result;
+                //     // Processar os dados do arquivo
+                // };
+                // reader.readAsText(file);
+            }
+        });
+        
+        // Adicionar o input ao documento e clicar nele
+        document.body.appendChild(fileInput);
+        fileInput.click();
+        
+        // Remover o input após a seleção
+        setTimeout(() => {
+            document.body.removeChild(fileInput);
+        }, 100);
     });
 
     // Encontrar o título e criar um container flex
@@ -1143,8 +1537,10 @@ document.addEventListener('DOMContentLoaded', function() {
         title.parentNode.insertBefore(headerContainer, title);
         headerContainer.appendChild(title);
         
-        // Adicionar o botão ao container
+        // Adicionar os botões ao container
         headerContainer.appendChild(btnDownloadLayout);
+        headerContainer.appendChild(btnEmptyLayout);
+        headerContainer.appendChild(btnUpload);
     }
 
     // Adicionar estilos para o botão
