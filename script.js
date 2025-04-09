@@ -1,4 +1,12 @@
 document.addEventListener('DOMContentLoaded', function() {
+    // Verificar se a biblioteca XLSX está disponível
+    if (typeof XLSX === 'undefined') {
+        console.error('Biblioteca XLSX não encontrada. Verifique se o script foi carregado corretamente.');
+        showAlert('Erro: Biblioteca XLSX não encontrada. Verifique se o script foi carregado corretamente.', 'error');
+    } else {
+        console.log('Biblioteca XLSX carregada com sucesso');
+    }
+    
     // Definição de todos os campos (apenas alguns exemplos - adicione todos)
     const fields = [
         { id: 'sequencialRegistro', name: 'Seq.Registro', description: 'Número sequencial do registro dentro do arquivo' },
@@ -20,7 +28,7 @@ document.addEventListener('DOMContentLoaded', function() {
         { id: 'plano', name: 'Plano', description: 'Código do plano adquirido pelo beneficiário' },
         { id: 'codigoBeneficiario', name: 'Cód.Benef.', description: 'Código do Beneficiário' },
         { id: 'nomeCompleto', name: 'Nome Completo', description: 'Nome do beneficiário' },
-        { id: 'cpfBeneficiario', name: 'CPF', description: 'CPF do beneficiário (sem formatação) quando maior de 18 anos' },
+        { id: 'cpfBeneficiario', name: 'CPF do Beneficiário', description: 'CPF do beneficiário' },
         { id: 'rgRneBeneficiario', name: 'RG/RNE', description: 'Número do RG quando beneficiário maior de 18 anos' },
         { id: 'orgaoExpedidor', name: 'Órgão Exp.', description: 'Órgão expedidor do RG' },
         { id: 'nomeMae', name: 'Nome Mãe', description: 'Nome da mãe' },
@@ -471,70 +479,17 @@ document.addEventListener('DOMContentLoaded', function() {
                         
                         // Para cada campo na linha
                         fields.forEach((value, fieldIndex) => {
-                            // Determinar qual campo estamos preenchendo
-                            let targetFieldId;
-                            
-                            // Mapear o índice do campo para o ID do campo
-                            // Assumindo que o primeiro campo é nome e o segundo é CPF
-                            if (fieldIndex === 0) {
-                                targetFieldId = 'nomeCompleto';
-                            } else if (fieldIndex === 1) {
-                                targetFieldId = 'cpfBeneficiario';
-                            } else if (fieldIndex === 2) {
-                                targetFieldId = 'dataNascimento';
-                            } else if (fieldIndex === 3) {
-                                targetFieldId = 'sexo';
-                            } else if (fieldIndex === 4) {
-                                targetFieldId = 'nomeMae';
-                            } else if (fieldIndex === 5) {
-                                targetFieldId = 'rgRneBeneficiario';
-                            } else if (fieldIndex === 6) {
-                                targetFieldId = 'orgaoExpedidor';
-                            } else if (fieldIndex === 7) {
-                                targetFieldId = 'estadoCivil';
-                            } else if (fieldIndex === 8) {
-                                targetFieldId = 'logradouro';
-                            } else if (fieldIndex === 9) {
-                                targetFieldId = 'numero';
-                            } else if (fieldIndex === 10) {
-                                targetFieldId = 'complemento';
-                            } else if (fieldIndex === 11) {
-                                targetFieldId = 'bairro';
-                            } else if (fieldIndex === 12) {
-                                targetFieldId = 'cidade';
-                            } else if (fieldIndex === 13) {
-                                targetFieldId = 'uf';
-                            } else if (fieldIndex === 14) {
-                                targetFieldId = 'cep';
-                            } else if (fieldIndex === 15) {
-                                targetFieldId = 'telefone1';
-                            } else if (fieldIndex === 16) {
-                                targetFieldId = 'dddTelefone1';
-                            } else if (fieldIndex === 17) {
-                                targetFieldId = 'telefone2';
-                            } else if (fieldIndex === 18) {
-                                targetFieldId = 'dddTelefone2';
-                            } else if (fieldIndex === 19) {
-                                targetFieldId = 'email';
-                            } else {
-                                // Se não houver mapeamento, usar o campo atual
-                                targetFieldId = field.id;
-                            }
+                            // Pegar o valor diretamente do campo correspondente
+                            const fieldValue = value || '';
                             
                             // Encontrar o input na linha correta
                             const row = document.querySelector(`tr[data-row-id="${currentRowIndex}"]`);
-                            const input = row.querySelector(`input[data-field-id="${targetFieldId}"]`);
+                            const input = row.querySelector(`input[data-field-id="${fields[fieldIndex].id}"]`);
                             
                             if (input) {
-                                // Atualizar o valor
-                                input.value = value;
-                                spreadsheetData[currentRowIndex][targetFieldId] = value;
-                                
-                                // Se for CPF, disparar o evento de input para aplicar a formatação
-                                if (targetFieldId === 'cpfBeneficiario') {
-                                    const event = new Event('input', { bubbles: true });
-                                    input.dispatchEvent(event);
-                                }
+                                // Atualizar o valor diretamente, sem tratamentos especiais
+                                input.value = fieldValue;
+                                spreadsheetData[currentRowIndex][fields[fieldIndex].id] = fieldValue;
                             }
                         });
                     });
@@ -848,240 +803,168 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Gerar o arquivo no formato especificado
     function generateFile() {
-        const accountNumber = document.getElementById('accountNumber')?.value?.trim();
-        const accountError = document.getElementById('accountError');
-        
-        if (!accountNumber) {
-            if (accountError) accountError.classList.remove('hidden');
-            showAlert('Por favor, preencha o número da conta da empresa', 'error');
-            document.getElementById('accountNumber')?.focus();
-            return;
-        }
-        
-        if (accountError) accountError.classList.add('hidden');
-        
-        // Verificar CPFs inválidos antes de gerar o arquivo
-        const invalidCPFs = [];
-        
-        spreadsheetData.forEach((rowData, index) => {
-            const cpf = rowData.cpfBeneficiario;
-            if (cpf && cpf.length === 11 && !validateCPF(cpf)) {
-                invalidCPFs.push({
-                    row: index + 1,
-                    cpf: cpf,
-                    nome: rowData.nomeCompleto || 'Sem nome'
-                });
-            }
-        });
-        
-        // Se houver CPFs inválidos, mostrar alerta e perguntar se deseja prosseguir
-        if (invalidCPFs.length > 0) {
-            const cpfList = invalidCPFs.map(item => 
-                `Linha ${item.row}: ${item.nome} - CPF: ${item.cpf}`
-            ).join('\n');
-            
-            const message = `Foram encontrados ${invalidCPFs.length} CPF(s) inválido(s):\n\n${cpfList}\n\nDeseja gerar o arquivo mesmo assim?`;
-            
-            // Substituir o confirm padrão por um modal personalizado
-            return new Promise((resolve) => {
-                const modal = document.createElement('div');
-                modal.className = 'fixed inset-0 z-50 flex items-center justify-center';
-                modal.innerHTML = `
-                    <div class="fixed inset-0 bg-black bg-opacity-50"></div>
-                    <div class="relative bg-white rounded-lg shadow-xl p-6 max-w-2xl w-full mx-4 z-10">
-                        <h3 class="text-lg font-medium text-gray-900 mb-4">CPFs Inválidos Detectados</h3>
-                        <div class="bg-red-50 border border-red-200 rounded-md p-4 mb-6">
-                            <p class="text-red-700 mb-2">Foram encontrados ${invalidCPFs.length} CPF(s) inválido(s):</p>
-                            <div class="max-h-60 overflow-y-auto bg-white rounded border border-red-100 p-3">
-                                <pre class="text-sm text-red-600 whitespace-pre-wrap">${cpfList}</pre>
-                            </div>
-                        </div>
-                        <p class="text-gray-700 mb-6">Deseja gerar o arquivo mesmo assim?</p>
-                        <div class="flex justify-end gap-3">
-                            <button type="button" class="cancel-btn px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-md transition-colors">
-                                Cancelar
-                            </button>
-                            <button type="button" class="confirm-btn px-4 py-2 text-sm font-medium text-white bg-red-600 hover:bg-red-700 rounded-md transition-colors">
-                                Gerar Arquivo
-                            </button>
-                        </div>
-                    </div>
-                `;
-                
-                document.body.appendChild(modal);
-                
-                // Event listeners para os botões do modal
-                modal.querySelector('.cancel-btn').onclick = () => {
-                    modal.remove();
-                    resolve(false);
-                };
-                
-                modal.querySelector('.confirm-btn').onclick = () => {
-                    modal.remove();
-                    resolve(true);
-                };
-                
-                // Fechar modal ao clicar no overlay
-                modal.querySelector('.bg-black').onclick = () => {
-                    modal.remove();
-                    resolve(false);
-                };
-            }).then(shouldProceed => {
-                if (shouldProceed) {
-                    // Continuar com a geração do arquivo
-                    generateFileContent();
-                }
-            });
-        }
-        
-        // Função para gerar o conteúdo do arquivo
-        function generateFileContent() {
-            let fileContent = '';
-            
-            // Remover resumo anterior se existir
-            const existingTotalsInfo = document.getElementById('totalsInfo');
-            if (existingTotalsInfo) {
-                existingTotalsInfo.remove();
-            }
-            
-            // Contadores para cada tipo de registro
-            const totals = {
-                N: 0,
-                D: 0,
-                C: 0,
-                I: 0,
-                E: 0,
-                U: 0,
-                A: 0
-            };
-            
-            // Linha de cabeçalho
-            fileContent += `1|H|MOVIMENTACAO|${accountNumber}|${formatDate(new Date())}\n`;
-            
-            // Processar registros
-            spreadsheetData.forEach((rowData, index) => {
-                const lineNumber = index + 2;
-                const tipoRegistro = rowData.tipoRegistro || 'N';
-                
-                if (totals.hasOwnProperty(tipoRegistro)) {
-                    totals[tipoRegistro]++;
-                }
+        // ... existing code ...
+                        // Remover a validação de CPFs inválidos antes de gerar o arquivo
+                        const accountNumber = document.getElementById('accountNumber')?.value?.trim();
+                        const accountError = document.getElementById('accountError');
+                        
+                        if (!accountNumber) {
+                            if (accountError) accountError.classList.remove('hidden');
+                            showAlert('Por favor, preencha o número da conta da empresa', 'error');
+                            document.getElementById('accountNumber')?.focus();
+                            return;
+                        }
+                        
+                        if (accountError) accountError.classList.add('hidden');
 
-                // Criar array com todos os 60 campos
-                const fields = [
-                    lineNumber,                                    // 1
-                    tipoRegistro,                                 // 2
-                    rowData.plano || '',                          // 3
-                    rowData.codigoBeneficiario || '',            // 4
-                    rowData.nomeCompleto || '',                   // 5
-                    rowData.cpfBeneficiario || '',               // 6
-                    rowData.rgRneBeneficiario || '',             // 7
-                    rowData.orgaoExpedidor || '',                // 8
-                    rowData.nomeMae || '',                       // 9
-                    rowData.dataNascimento || '',                // 10
-                    rowData.sexo || '',                          // 11
-                    rowData.cns || '',                           // 12
-                    rowData.estadoCivil || '',                   // 13
-                    rowData.logradouro || '',                    // 14
-                    rowData.numero || '',                        // 15
-                    rowData.complemento || '',                   // 16
-                    rowData.bairro || '',                       // 17
-                    rowData.cidade || '',                       // 18
-                    rowData.uf || '',                           // 19
-                    rowData.cep || '',                          // 20
-                    rowData.tipoTelefone1 || '',                // 21
-                    rowData.dddTelefone1 || '',                 // 22
-                    rowData.telefone1 || '',                    // 23
-                    rowData.ramalTelefone1 || '',               // 24
-                    rowData.tipoTelefone2 || '',                // 25
-                    rowData.dddTelefone2 || '',                 // 26
-                    rowData.telefone2 || '',                    // 27
-                    rowData.ramalTelefone2 || '',               // 28
-                    rowData.servidorPublico || '',              // 29
-                    rowData.tipoMovimentacao || '',             // 30
-                    rowData.valorMensalidade || '',             // 31
-                    rowData.dataOperacao || '',                 // 32
-                    rowData.dataInicioVigencia || '',           // 33
-                    rowData.motivoCancelamento || '',           // 34
-                    rowData.formaPagamento || '',               // 35
-                    rowData.banco || '',                        // 36
-                    rowData.agencia || '',                      // 37
-                    rowData.contaCorrente || '',                // 38
-                    rowData.tipoConta || '',                    // 39
-                    rowData.codigoVendedor || '',               // 40
-                    rowData.codigoGerente || '',                // 41
-                    rowData.codigoLoja || '',                   // 42
-                    rowData.codigoRegional || '',               // 43
-                    rowData.contrato || '',                     // 44
-                    rowData.locacao || '',                      // 45
-                    rowData.email || '',                        // 46
-                    rowData.diaCobranca || '',                  // 47
-                    rowData.grauParentesco || '',               // 48
-                    rowData.vinculoCpfTitular || '',            // 49
-                    rowData.codigoBeneficiarioTitular || '',    // 50
-                    rowData.funcionalMatricula || '',           // 51
-                    rowData.centroCusto || '',                  // 52
-                    rowData.carteirinha || '',                  // 53
-                    rowData.naturezaDocumentoIdentificacao || '', // 54
-                    rowData.dataExpedicao || '',                // 55
-                    rowData.passaporteCarteiraCivil || '',      // 56
-                    rowData.atividadePrincipalDesenvolvida || '', // 57
-                    rowData.informacaoAdicional1 || '',          // 58
-                    rowData.informacaoAdicional2 || '',          // 59
-                    rowData.informacaoAdicional3 || ''            // 60
-                ];
+                        // Função para gerar o conteúdo do arquivo
+                        function generateFileContent() {
+                            let fileContent = '';
+                            
+                            // Remover resumo anterior se existir
+                            const existingTotalsInfo = document.getElementById('totalsInfo');
+                            if (existingTotalsInfo) {
+                                existingTotalsInfo.remove();
+                            }
 
-                // Adicionar linha com exatamente 60 campos
-                fileContent += fields.join('|') + '\n';
-            });
-            
-            // Calcular total de registros (header + registros + trailer)
-            const totalRegistros = spreadsheetData.length + 2;
-            
-            // Adicionar linha de trailer
-            fileContent += `${totalRegistros}|T|` +
-                `${totals.N}|` +
-                `${totals.D}|` +
-                `${totals.C}|` +
-                `${totals.I}|` +
-                `${totals.E}|` +
-                `${totals.U}|` +
-                `${totals.A}|` +
-                `${totalRegistros}`;
-            
-            output.textContent = fileContent;
-            btnCopy.classList.remove('hidden');
-            btnDownload.classList.remove('hidden');
-            
-            // Criar elemento para mostrar os totais
-            const totalsInfo = document.createElement('div');
-            totalsInfo.id = 'totalsInfo'; // Adicionar ID para fácil referência
-            totalsInfo.className = 'mt-4 p-4 bg-gray-50 rounded-lg border border-gray-200';
-            totalsInfo.innerHTML = `
-                <h3 class="text-sm font-semibold text-gray-700 mb-2">Resumo dos Registros</h3>
-                <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
-                    ${Object.entries(totals).map(([tipo, total]) => `
-                        <div class="bg-white p-2 rounded shadow-sm">
-                            <div class="text-xs text-gray-500">Tipo ${tipo}</div>
-                            <div class="text-lg font-semibold">${total}</div>
-                        </div>
-                    `).join('')}
-                    <div class="bg-indigo-50 p-2 rounded shadow-sm">
-                        <div class="text-xs text-indigo-600">Total Geral</div>
-                        <div class="text-lg font-semibold">${totalRegistros}</div>
-                    </div>
-                </div>
-            `;
+                            // Contadores para cada tipo de registro
+                            const totals = {
+                                N: 0,
+                                D: 0,
+                                C: 0,
+                                I: 0,
+                                E: 0,
+                                U: 0,
+                                A: 0
+                            };
+                            
+                            // Linha de cabeçalho
+                            fileContent += `1|H|MOVIMENTACAO|${accountNumber}|${formatDate(new Date())}\n`;
+                            
+                            // Processar registros
+                            spreadsheetData.forEach((rowData, index) => {
+                                const lineNumber = index + 2;
+                                const tipoRegistro = rowData.tipoRegistro || 'N';
+                                
+                                if (totals.hasOwnProperty(tipoRegistro)) {
+                                    totals[tipoRegistro]++;
+                                }
 
-            // Inserir o elemento de totais após o output
-            output.parentNode.insertBefore(totalsInfo, output.nextSibling);
-            
-            // Rolagem automática para a pré-visualização
-            output.scrollIntoView({ behavior: 'smooth' });
-        }
-        
-        // Iniciar a geração do arquivo
-        generateFileContent();
+                                // Criar array com todos os 60 campos
+                                const fields = [
+                                    lineNumber,                                    // 1
+                                    tipoRegistro,                                 // 2
+                                    rowData.plano || '',                          // 3
+                                    rowData.codigoBeneficiario || '',            // 4
+                                    rowData.nomeCompleto || '',                   // 5
+                                    rowData.cpfBeneficiario || '',               // 6
+                                    rowData.rgRneBeneficiario || '',             // 7
+                                    rowData.orgaoExpedidor || '',                // 8
+                                    rowData.nomeMae || '',                       // 9
+                                    rowData.dataNascimento || '',                // 10
+                                    rowData.sexo || '',                          // 11
+                                    rowData.cns || '',                           // 12
+                                    rowData.estadoCivil || '',                   // 13
+                                    rowData.logradouro || '',                    // 14
+                                    rowData.numero || '',                        // 15
+                                    rowData.complemento || '',                   // 16
+                                    rowData.bairro || '',                       // 17
+                                    rowData.cidade || '',                       // 18
+                                    rowData.uf || '',                           // 19
+                                    rowData.cep || '',                          // 20
+                                    rowData.tipoTelefone1 || '',                // 21
+                                    rowData.dddTelefone1 || '',                 // 22
+                                    rowData.telefone1 || '',                    // 23
+                                    rowData.ramalTelefone1 || '',               // 24
+                                    rowData.tipoTelefone2 || '',                // 25
+                                    rowData.dddTelefone2 || '',                 // 26
+                                    rowData.telefone2 || '',                    // 27
+                                    rowData.ramalTelefone2 || '',               // 28
+                                    rowData.servidorPublico || '',              // 29
+                                    rowData.tipoMovimentacao || '',             // 30
+                                    rowData.valorMensalidade || '',             // 31
+                                    rowData.dataOperacao || '',                 // 32
+                                    rowData.dataInicioVigencia || '',           // 33
+                                    rowData.motivoCancelamento || '',           // 34
+                                    rowData.formaPagamento || '',               // 35
+                                    rowData.banco || '',                        // 36
+                                    rowData.agencia || '',                      // 37
+                                    rowData.contaCorrente || '',                // 38
+                                    rowData.tipoConta || '',                    // 39
+                                    rowData.codigoVendedor || '',               // 40
+                                    rowData.codigoGerente || '',                // 41
+                                    rowData.codigoLoja || '',                   // 42
+                                    rowData.codigoRegional || '',               // 43
+                                    rowData.contrato || '',                     // 44
+                                    rowData.locacao || '',                      // 45
+                                    rowData.email || '',                        // 46
+                                    rowData.diaCobranca || '',                  // 47
+                                    rowData.grauParentesco || '',               // 48
+                                    rowData.vinculoCpfTitular || '',            // 49
+                                    rowData.codigoBeneficiarioTitular || '',    // 50
+                                    rowData.funcionalMatricula || '',           // 51
+                                    rowData.centroCusto || '',                  // 52
+                                    rowData.carteirinha || '',                  // 53
+                                    rowData.naturezaDocumentoIdentificacao || '', // 54
+                                    rowData.dataExpedicao || '',                // 55
+                                    rowData.passaporteCarteiraCivil || '',      // 56
+                                    rowData.atividadePrincipalDesenvolvida || '', // 57
+                                    rowData.informacaoAdicional1 || '',          // 58
+                                    rowData.informacaoAdicional2 || '',          // 59
+                                    rowData.informacaoAdicional3 || ''            // 60
+                                ];
+
+                                // Adicionar linha com exatamente 60 campos
+                                fileContent += fields.join('|') + '\n';
+                            });
+                            
+                            // Calcular total de registros (header + registros + trailer)
+                            const totalRegistros = spreadsheetData.length + 2;
+                            
+                            // Adicionar linha de trailer
+                            fileContent += `${totalRegistros}|T|` +
+                                `${totals.N}|` +
+                                `${totals.D}|` +
+                                `${totals.C}|` +
+                                `${totals.I}|` +
+                                `${totals.E}|` +
+                                `${totals.U}|` +
+                                `${totals.A}|` +
+                                `${totalRegistros}`;
+                            
+                            output.textContent = fileContent;
+                            btnCopy.classList.remove('hidden');
+                            btnDownload.classList.remove('hidden');
+                            
+                            // Criar elemento para mostrar os totais
+                            const totalsInfo = document.createElement('div');
+                            totalsInfo.id = 'totalsInfo'; // Adicionar ID para fácil referência
+                            totalsInfo.className = 'mt-4 p-4 bg-gray-50 rounded-lg border border-gray-200';
+                            totalsInfo.innerHTML = `
+                                <h3 class="text-sm font-semibold text-gray-700 mb-2">Resumo dos Registros</h3>
+                                <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+                                    ${Object.entries(totals).map(([tipo, total]) => `
+                                        <div class="bg-white p-2 rounded shadow-sm">
+                                            <div class="text-xs text-gray-500">Tipo ${tipo}</div>
+                                            <div class="text-lg font-semibold">${total}</div>
+                                        </div>
+                                    `).join('')}
+                                    <div class="bg-indigo-50 p-2 rounded shadow-sm">
+                                        <div class="text-xs text-indigo-600">Total Geral</div>
+                                        <div class="text-lg font-semibold">${totalRegistros}</div>
+                                    </div>
+                                </div>
+                            `;
+
+                            // Inserir o elemento de totais após o output
+                            output.parentNode.insertBefore(totalsInfo, output.nextSibling);
+                            
+                            // Rolagem automática para a pré-visualização
+                            output.scrollIntoView({ behavior: 'smooth' });
+                        }
+                        
+                        // Iniciar a geração do arquivo
+                        generateFileContent();
     }
 
     // Funções auxiliares
@@ -1147,70 +1030,17 @@ document.addEventListener('DOMContentLoaded', function() {
                 
                 // Para cada campo na linha
                 fields.forEach((value, fieldIndex) => {
-                    // Determinar qual campo estamos preenchendo
-                    let targetFieldId;
-                    
-                    // Mapear o índice do campo para o ID do campo
-                    // Assumindo que o primeiro campo é nome e o segundo é CPF
-                    if (fieldIndex === 0) {
-                        targetFieldId = 'nomeCompleto';
-                    } else if (fieldIndex === 1) {
-                        targetFieldId = 'cpfBeneficiario';
-                    } else if (fieldIndex === 2) {
-                        targetFieldId = 'dataNascimento';
-                    } else if (fieldIndex === 3) {
-                        targetFieldId = 'sexo';
-                    } else if (fieldIndex === 4) {
-                        targetFieldId = 'nomeMae';
-                    } else if (fieldIndex === 5) {
-                        targetFieldId = 'rgRneBeneficiario';
-                    } else if (fieldIndex === 6) {
-                        targetFieldId = 'orgaoExpedidor';
-                    } else if (fieldIndex === 7) {
-                        targetFieldId = 'estadoCivil';
-                    } else if (fieldIndex === 8) {
-                        targetFieldId = 'logradouro';
-                    } else if (fieldIndex === 9) {
-                        targetFieldId = 'numero';
-                    } else if (fieldIndex === 10) {
-                        targetFieldId = 'complemento';
-                    } else if (fieldIndex === 11) {
-                        targetFieldId = 'bairro';
-                    } else if (fieldIndex === 12) {
-                        targetFieldId = 'cidade';
-                    } else if (fieldIndex === 13) {
-                        targetFieldId = 'uf';
-                    } else if (fieldIndex === 14) {
-                        targetFieldId = 'cep';
-                    } else if (fieldIndex === 15) {
-                        targetFieldId = 'telefone1';
-                    } else if (fieldIndex === 16) {
-                        targetFieldId = 'dddTelefone1';
-                    } else if (fieldIndex === 17) {
-                        targetFieldId = 'telefone2';
-                    } else if (fieldIndex === 18) {
-                        targetFieldId = 'dddTelefone2';
-                    } else if (fieldIndex === 19) {
-                        targetFieldId = 'email';
-                    } else {
-                        // Se não houver mapeamento, usar o campo atual
-                        targetFieldId = field.id;
-                    }
+                    // Pegar o valor diretamente do campo correspondente
+                    const fieldValue = value || '';
                     
                     // Encontrar o input na linha correta
                     const row = document.querySelector(`tr[data-row-id="${currentRowIndex}"]`);
-                    const input = row.querySelector(`input[data-field-id="${targetFieldId}"]`);
+                    const input = row.querySelector(`input[data-field-id="${fields[fieldIndex].id}"]`);
                     
                     if (input) {
-                        // Atualizar o valor
-                        input.value = value;
-                        spreadsheetData[currentRowIndex][targetFieldId] = value;
-                        
-                        // Se for CPF, disparar o evento de input para aplicar a formatação
-                        if (targetFieldId === 'cpfBeneficiario') {
-                            const event = new Event('input', { bubbles: true });
-                            input.dispatchEvent(event);
-                        }
+                        // Atualizar o valor diretamente, sem tratamentos especiais
+                        input.value = fieldValue;
+                        spreadsheetData[currentRowIndex][fields[fieldIndex].id] = fieldValue;
                     }
                 });
             });
@@ -1493,6 +1323,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Adicionar evento de clique
     btnUpload.addEventListener('click', function() {
+        console.log('Botão de upload clicado');
+        
         // Criar um input de arquivo oculto
         const fileInput = document.createElement('input');
         fileInput.type = 'file';
@@ -1501,18 +1333,309 @@ document.addEventListener('DOMContentLoaded', function() {
         
         // Adicionar evento de mudança para processar o arquivo selecionado
         fileInput.addEventListener('change', function(e) {
+            console.log('Arquivo selecionado:', e.target.files[0]);
             const file = e.target.files[0];
             if (file) {
-                // Aqui você pode adicionar a lógica para processar o arquivo
-                showAlert(`Arquivo "${file.name}" selecionado para upload`, 'success');
+                const reader = new FileReader();
                 
-                // Exemplo de como você poderia processar o arquivo:
-                // const reader = new FileReader();
-                // reader.onload = function(event) {
-                //     const data = event.target.result;
-                //     // Processar os dados do arquivo
-                // };
-                // reader.readAsText(file);
+                reader.onload = function(event) {
+                    console.log('Arquivo lido com sucesso');
+                    try {
+                        const data = new Uint8Array(event.target.result);
+                        console.log('Dados do arquivo convertidos para Uint8Array');
+                        
+                        // Verificar se a biblioteca XLSX está disponível
+                        if (typeof XLSX === 'undefined') {
+                            console.error('Biblioteca XLSX não encontrada');
+                            showAlert('Erro: Biblioteca XLSX não encontrada. Verifique se o script foi carregado corretamente.', 'error');
+                            return;
+                        }
+                        
+                        const workbook = XLSX.read(data, { type: 'array' });
+                        console.log('Arquivo Excel lido com sucesso:', workbook.SheetNames);
+                        
+                        // Verificar se o arquivo tem planilhas
+                        if (workbook.SheetNames.length === 0) {
+                            showAlert('O arquivo não contém planilhas. Verifique se o arquivo está no formato correto.', 'error');
+                            return;
+                        }
+                        
+                        // Pegar a primeira planilha
+                        const firstSheetName = workbook.SheetNames[0];
+                        const worksheet = workbook.Sheets[firstSheetName];
+                        
+                        // Converter para JSON com opções específicas para preservar o formato original
+                        const jsonData = XLSX.utils.sheet_to_json(worksheet, { 
+                            header: 1,
+                            raw: false, // Forçar leitura como texto
+                            defval: '', // Valor padrão para células vazias
+                            blankrows: false, // Ignorar linhas em branco
+                            rawNumbers: false // Forçar todos os números a serem lidos como texto
+                        });
+                        console.log('Dados convertidos para JSON:', jsonData.length, 'linhas');
+                        
+                        // Verificar se há dados
+                        if (jsonData.length === 0) {
+                            showAlert('O arquivo não contém dados. Verifique se a planilha está preenchida.', 'error');
+                            return;
+                        }
+                        
+                        // Verificar se há dados suficientes
+                        if (jsonData.length < 2) {
+                            showAlert('O arquivo não contém dados suficientes. Verifique se há pelo menos um cabeçalho e uma linha de dados.', 'warning');
+                            return;
+                        }
+                        
+                        // Remover cabeçalho
+                        const headers = jsonData[0];
+                        const rows = jsonData.slice(1);
+                        
+                        console.log('Cabeçalhos:', headers);
+                        console.log('Linhas de dados:', rows.length);
+                        
+                        // Verificar se os cabeçalhos correspondem aos campos esperados
+                        const validFields = fields.map(field => field.id);
+                        const invalidHeaders = headers.filter(header => !validFields.includes(header));
+                        
+                        if (invalidHeaders.length > 0) {
+                            console.warn('Cabeçalhos inválidos encontrados:', invalidHeaders);
+                            showAlert(`Atenção: Alguns cabeçalhos não correspondem aos campos esperados: ${invalidHeaders.join(', ')}`, 'warning');
+                        }
+                        
+                        // Verificar se o cabeçalho do tipo de registro está presente
+                        const hasTipoRegistroHeader = headers.some(header => header === 'tipoRegistro');
+                        if (!hasTipoRegistroHeader && !defaultTipoRegistro) {
+                            showAlert('Atenção: O campo "Tipo de Registro" não foi encontrado no arquivo e não há um valor padrão definido. Será usado "N" como padrão.', 'warning');
+                            defaultTipoRegistro = 'N';
+                        }
+                        
+                        // Criar um mapeamento de cabeçalhos para IDs de campos
+                        const headerMapping = {};
+                        console.log('Cabeçalhos encontrados no arquivo:', headers);
+                        console.log('Campos válidos do sistema:', validFields);
+                        
+                        headers.forEach((header, index) => {
+                            // Normalizar o cabeçalho removendo espaços extras e caracteres especiais
+                            const normalizedHeader = header.toLowerCase().trim()
+                                .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+                                .replace(/[^a-z0-9]/g, '');
+                            
+                            console.log(`Processando cabeçalho "${header}" (normalizado: "${normalizedHeader}")`);
+                            
+                            // Verificar se o cabeçalho corresponde exatamente a um ID de campo
+                            if (validFields.includes(header)) {
+                                headerMapping[index] = header;
+                                console.log(`Mapeamento direto encontrado para "${header}"`);
+                            } else {
+                                // Tentar encontrar um campo correspondente pelo nome
+                                const matchingField = fields.find(field => {
+                                    // Normalizar o nome do campo também
+                                    const normalizedFieldName = field.name.toLowerCase().trim()
+                                        .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+                                        .replace(/[^a-z0-9]/g, '');
+                                    
+                                    console.log(`Comparando "${normalizedHeader}" com "${normalizedFieldName}"`);
+                                    
+                                    // Verificar correspondência exata
+                                    if (normalizedFieldName === normalizedHeader) {
+                                        console.log(`Correspondência exata encontrada: "${header}" -> "${field.name}"`);
+                                        return true;
+                                    }
+                                    
+                                    // Verificações específicas para o campo CPF
+                                    if (field.id === 'cpfBeneficiario') {
+                                        const cpfVariations = [
+                                            'cpf', 
+                                            'cpfbeneficiario', 
+                                            'cpfdobeneficiario', 
+                                            'cpftitular',
+                                            'cpfdotitular',
+                                            'cpfdependente',
+                                            'cpfdodependente',
+                                            'cpfcliente',
+                                            'cpfdocliente',
+                                            'cpfpaciente',
+                                            'cpfdopaciente',
+                                            'cpfsegurado',
+                                            'cpfdosegurado',
+                                            'numerocpf',
+                                            'numerodocpf',
+                                            'cpfnumero',
+                                            'cpfdobeneficiario',
+                                            'cpf do beneficiario',
+                                            'cpf do beneficiário',
+                                            'cpf do titular',
+                                            'cpf do dependente',
+                                            'cpf do cliente',
+                                            'cpf do paciente',
+                                            'cpf do segurado'
+                                        ];
+                                        
+                                        // Verificar se o cabeçalho normalizado corresponde a alguma variação
+                                        const found = cpfVariations.some(variation => {
+                                            const normalizedVariation = variation.toLowerCase().trim()
+                                                .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+                                                .replace(/[^a-z0-9]/g, '');
+                                            
+                                            const matches = normalizedHeader.includes(normalizedVariation) || 
+                                                          normalizedVariation.includes(normalizedHeader);
+                                            
+                                            if (matches) {
+                                                console.log(`Correspondência de CPF encontrada: "${header}" (${normalizedHeader}) corresponde a "${variation}" (${normalizedVariation})`);
+                                            }
+                                            
+                                            return matches;
+                                        });
+                                        
+                                        if (found) {
+                                            console.log(`Mapeamento de CPF encontrado: "${header}" -> cpfBeneficiario`);
+                                        }
+                                        
+                                        return found;
+                                    }
+                                    
+                                    // Verificar se o cabeçalho contém o nome do campo ou vice-versa
+                                    const containsMatch = normalizedFieldName.includes(normalizedHeader) ||
+                                                        normalizedHeader.includes(normalizedFieldName);
+                                    
+                                    if (containsMatch) {
+                                        console.log(`Correspondência parcial encontrada: "${header}" -> "${field.name}"`);
+                                    }
+                                    
+                                    return containsMatch;
+                                });
+                                
+                                if (matchingField) {
+                                    headerMapping[index] = matchingField.id;
+                                    console.log(`Mapeamento final: "${header}" -> "${matchingField.id}"`);
+                                } else {
+                                    console.warn(`Não foi possível mapear o cabeçalho "${header}" para nenhum campo`);
+                                }
+                            }
+                        });
+                        
+                        console.log('Mapeamento final de cabeçalhos:', headerMapping);
+                        
+                        // Limpar dados existentes
+                        spreadsheetData = [];
+                        sheetBody.innerHTML = '';
+                        
+                        // Adicionar novas linhas com os dados do Excel
+                        rows.forEach((row, index) => {
+                            console.log(`Processando linha ${index + 1}:`, row);
+                            
+                            // Criar nova linha
+                            addNewRow();
+                            
+                            // Preencher os dados
+                            row.forEach((value, colIndex) => {
+                                const fieldId = headerMapping[colIndex];
+                                if (fieldId) {
+                                    console.log(`Preenchendo campo ${fieldId} com valor:`, value, 'tipo:', typeof value);
+                                    const input = document.querySelector(`tr[data-row-id="${index}"] input[data-field-id="${fieldId}"]`);
+                                    
+                                    if (input) {
+                                        // Tratamento especial para o campo CPF
+                                        if (fieldId === 'cpfBeneficiario') {
+                                            console.log('Processando campo CPF com valor original:', value);
+                                            
+                                            // Garantir que o valor seja tratado como string
+                                            let cpfValue = '';
+                                            
+                                            if (value !== null && value !== undefined) {
+                                                // Se for um número, converter para string
+                                                if (typeof value === 'number') {
+                                                    cpfValue = value.toString();
+                                                    // Se for número em notação científica
+                                                    if (cpfValue.includes('e+')) {
+                                                        cpfValue = Number(value).toFixed(0);
+                                                    }
+                                                } else {
+                                                    cpfValue = value.toString();
+                                                }
+                                                
+                                                // Remover qualquer caractere não numérico
+                                                cpfValue = cpfValue.replace(/[^\d]/g, '');
+                                                
+                                                console.log('CPF após limpeza inicial:', cpfValue);
+                                                
+                                                // Se o CPF estiver vazio após a limpeza, tentar outros formatos
+                                                if (!cpfValue && typeof value === 'number') {
+                                                    cpfValue = value.toFixed(0);
+                                                }
+                                                
+                                                // Tratar o comprimento do CPF
+                                                if (cpfValue.length > 11) {
+                                                    // Se tiver mais de 11 dígitos, pegar apenas os 11 últimos
+                                                    cpfValue = cpfValue.slice(-11);
+                                                } else if (cpfValue.length > 0 && cpfValue.length < 11) {
+                                                    // Se tiver menos de 11 dígitos mas não estiver vazio, completar com zeros
+                                                    cpfValue = cpfValue.padStart(11, '0');
+                                                }
+                                                
+                                                // Verificar se é um CPF válido (tem 11 dígitos e não é só zeros)
+                                                if (cpfValue.length === 11 && !/^0+$/.test(cpfValue)) {
+                                                    // Manter o valor do CPF
+                                                    console.log('CPF válido encontrado:', cpfValue);
+                                                } else if (!cpfValue) {
+                                                    // Se estiver vazio, manter vazio
+                                                    cpfValue = '';
+                                                }
+                                            }
+                                            
+                                            console.log('CPF final formatado:', cpfValue);
+                                            
+                                            // Atualizar o valor
+                                            input.value = cpfValue;
+                                            spreadsheetData[index][fieldId] = cpfValue;
+                                        } else {
+                                            input.value = value;
+                                            spreadsheetData[index][fieldId] = value;
+                                        }
+                                    } else {
+                                        console.warn(`Campo ${fieldId} não encontrado na linha ${index}`);
+                                    }
+                                } else {
+                                    console.warn(`Cabeçalho na coluna ${colIndex} não encontrado no mapeamento`);
+                                }
+                            });
+                            
+                            // Se o tipo de registro não foi preenchido, usar o valor padrão
+                            if (!spreadsheetData[index].tipoRegistro && defaultTipoRegistro) {
+                                spreadsheetData[index].tipoRegistro = defaultTipoRegistro;
+                                const tipoRegistroInput = document.querySelector(`tr[data-row-id="${index}"] input[data-field-id="tipoRegistro"]`);
+                                if (tipoRegistroInput) {
+                                    tipoRegistroInput.value = defaultTipoRegistro;
+                                }
+                            }
+                            
+                            // Verificar se o tipo de registro é válido
+                            const tipoRegistro = spreadsheetData[index].tipoRegistro;
+                            if (tipoRegistro && !['N', 'C', 'A', 'U', 'D', 'I', 'E'].includes(tipoRegistro)) {
+                                console.warn(`Tipo de registro inválido na linha ${index + 1}: ${tipoRegistro}`);
+                                showAlert(`Atenção: Tipo de registro inválido na linha ${index + 1}: ${tipoRegistro}. Será usado o valor padrão.`, 'warning');
+                                spreadsheetData[index].tipoRegistro = defaultTipoRegistro || 'N';
+                                const tipoRegistroInput = document.querySelector(`tr[data-row-id="${index}"] input[data-field-id="tipoRegistro"]`);
+                                if (tipoRegistroInput) {
+                                    tipoRegistroInput.value = spreadsheetData[index].tipoRegistro;
+                                }
+                            }
+                        });
+                        
+                        showAlert(`Arquivo importado com sucesso! ${rows.length} registros adicionados.`, 'success');
+                    } catch (error) {
+                        console.error('Erro ao processar arquivo:', error);
+                        showAlert('Erro ao processar o arquivo. Verifique se o formato está correto. Detalhes: ' + error.message, 'error');
+                    }
+                };
+                
+                reader.onerror = function(error) {
+                    console.error('Erro ao ler o arquivo:', error);
+                    showAlert('Erro ao ler o arquivo: ' + error, 'error');
+                };
+                
+                // Ler o arquivo como ArrayBuffer
+                reader.readAsArrayBuffer(file);
             }
         });
         
@@ -1636,6 +1759,21 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Adicionar os novos estilos ao elemento style existente
     style.textContent += tooltipStyles;
+
+    // Adicionar estilos para CPFs inválidos
+    const cpfStyles = `
+        .invalid-cpf {
+            background-color: #fee2e2 !important;
+            border-color: #ef4444 !important;
+        }
+        
+        .invalid-cpf:focus {
+            box-shadow: 0 0 0 1px #ef4444 !important;
+        }
+    `;
+
+    // Adicionar os novos estilos ao elemento style existente
+    style.textContent += cpfStyles;
 
     // Função para mostrar modal de escolha
     function showChoiceDialog(selectedValue, rowId, fieldId) {
@@ -1761,12 +1899,6 @@ document.addEventListener('DOMContentLoaded', function() {
 
         // Validar por tipo
         switch (validation.type) {
-            case 'cpf':
-                if (value) {
-                    const unmaskedValue = value.replace(/\D/g, '');
-                    return validateCPF(unmaskedValue);
-                }
-                break;
             case 'date':
                 if (value) {
                     const dateRegex = /^(0[1-9]|[12][0-9]|3[01])(0[1-9]|1[0-2])\d{4}$/;
@@ -1778,7 +1910,6 @@ document.addEventListener('DOMContentLoaded', function() {
                     return validation.options.some(opt => opt.value === value);
                 }
                 break;
-            // ... outros tipos de validação ...
         }
 
         return true;
@@ -1818,35 +1949,6 @@ document.addEventListener('DOMContentLoaded', function() {
         }
         
         return age;
-    }
-
-    // Função para validar CPF
-    function validateCPF(cpf) {
-        cpf = cpf.replace(/\D/g, '');
-        
-        if (cpf.length !== 11) return false;
-        
-        if (/^(\d)\1{10}$/.test(cpf)) return false;
-        
-        let sum = 0;
-        for (let i = 0; i < 9; i++) {
-            sum += parseInt(cpf.charAt(i)) * (10 - i);
-        }
-        
-        let rev = 11 - (sum % 11);
-        if (rev === 10 || rev === 11) rev = 0;
-        if (rev !== parseInt(cpf.charAt(9))) return false;
-        
-        sum = 0;
-        for (let i = 0; i < 10; i++) {
-            sum += parseInt(cpf.charAt(i)) * (11 - i);
-        }
-        
-        rev = 11 - (sum % 11);
-        if (rev === 10 || rev === 11) rev = 0;
-        if (rev !== parseInt(cpf.charAt(10))) return false;
-        
-        return true;
     }
 
     // Adicionar evento para esconder a mensagem de erro quando o usuário começar a digitar
@@ -1907,4 +2009,53 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Inicializar a planilha
     initSpreadsheet();
+
+    // Criar botão de limpar
+    const btnClear = document.createElement('button');
+    btnClear.className = 'ml-2 p-2 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-full transition-colors';
+    btnClear.innerHTML = `
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+            <path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd"/>
+        </svg>
+    `;
+
+    // Adicionar tooltip
+    btnClear.title = 'Limpar todos os dados';
+
+    // Adicionar evento de clique
+    btnClear.addEventListener('click', function() {
+        showConfirmDialog('Tem certeza que deseja limpar todos os dados?', function() {
+            // Limpar dados
+            spreadsheetData = [];
+            sheetBody.innerHTML = '';
+            output.textContent = '';
+            
+            // Limpar número da conta
+            const accountNumber = document.getElementById('accountNumber');
+            if (accountNumber) {
+                accountNumber.value = '';
+            }
+            
+            // Esconder botões de copiar e download
+            btnCopy.classList.add('hidden');
+            btnDownload.classList.add('hidden');
+            
+            // Remover resumo se existir
+            const totalsInfo = document.getElementById('totalsInfo');
+            if (totalsInfo) {
+                totalsInfo.remove();
+            }
+            
+            // Adicionar uma linha inicial vazia
+            addNewRow();
+            
+            showAlert('Todos os dados foram limpos com sucesso!', 'success');
+        });
+    });
+
+    // Encontrar o container do header e adicionar o botão
+    const headerContainer = document.querySelector('header > div:last-child');
+    if (headerContainer) {
+        headerContainer.appendChild(btnClear);
+    }
 });
