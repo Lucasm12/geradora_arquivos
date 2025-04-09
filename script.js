@@ -1352,27 +1352,16 @@ document.addEventListener('DOMContentLoaded', function() {
                         }
                         
                         const workbook = XLSX.read(data, { type: 'array' });
-                        console.log('Arquivo Excel lido com sucesso:', workbook.SheetNames);
-                        
-                        // Verificar se o arquivo tem planilhas
-                        if (workbook.SheetNames.length === 0) {
-                            showAlert('O arquivo não contém planilhas. Verifique se o arquivo está no formato correto.', 'error');
-                            return;
-                        }
-                        
-                        // Pegar a primeira planilha
                         const firstSheetName = workbook.SheetNames[0];
                         const worksheet = workbook.Sheets[firstSheetName];
                         
-                        // Converter para JSON com opções específicas para preservar o formato original
+                        // Converter para JSON com opções específicas
                         const jsonData = XLSX.utils.sheet_to_json(worksheet, { 
                             header: 1,
-                            raw: false, // Forçar leitura como texto
-                            defval: '', // Valor padrão para células vazias
-                            blankrows: false, // Ignorar linhas em branco
-                            rawNumbers: false // Forçar todos os números a serem lidos como texto
+                            raw: false,
+                            defval: '',
+                            blankrows: false
                         });
-                        console.log('Dados convertidos para JSON:', jsonData.length, 'linhas');
                         
                         // Verificar se há dados
                         if (jsonData.length === 0) {
@@ -1386,217 +1375,24 @@ document.addEventListener('DOMContentLoaded', function() {
                             return;
                         }
                         
-                        // Remover cabeçalho
-                        const headers = jsonData[0];
-                        const rows = jsonData.slice(1);
-                        
-                        console.log('Cabeçalhos:', headers);
-                        console.log('Linhas de dados:', rows.length);
-                        
-                        // Verificar se os cabeçalhos correspondem aos campos esperados
-                        const validFields = fields.map(field => field.id);
-                        const invalidHeaders = headers.filter(header => !validFields.includes(header));
-                        
-                        if (invalidHeaders.length > 0) {
-                            console.warn('Cabeçalhos inválidos encontrados:', invalidHeaders);
-                            showAlert(`Atenção: Alguns cabeçalhos não correspondem aos campos esperados: ${invalidHeaders.join(', ')}`, 'warning');
-                        }
-                        
-                        // Verificar se o cabeçalho do tipo de registro está presente
-                        const hasTipoRegistroHeader = headers.some(header => header === 'tipoRegistro');
-                        if (!hasTipoRegistroHeader && !defaultTipoRegistro) {
-                            showAlert('Atenção: O campo "Tipo de Registro" não foi encontrado no arquivo e não há um valor padrão definido. Será usado "N" como padrão.', 'warning');
-                            defaultTipoRegistro = 'N';
-                        }
-                        
-                        // Criar um mapeamento de cabeçalhos para IDs de campos
-                        const headerMapping = {};
-                        console.log('Cabeçalhos encontrados no arquivo:', headers);
-                        console.log('Campos válidos do sistema:', validFields);
-                        
-                        headers.forEach((header, index) => {
-                            // Normalizar o cabeçalho removendo espaços extras e caracteres especiais
-                            const normalizedHeader = header.toLowerCase().trim()
-                                .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
-                                .replace(/[^a-z0-9]/g, '');
-                            
-                            console.log(`Processando cabeçalho "${header}" (normalizado: "${normalizedHeader}")`);
-                            
-                            // Verificar se o cabeçalho corresponde exatamente a um ID de campo
-                            if (validFields.includes(header)) {
-                                headerMapping[index] = header;
-                                console.log(`Mapeamento direto encontrado para "${header}"`);
-                            } else {
-                                // Tentar encontrar um campo correspondente pelo nome
-                                const matchingField = fields.find(field => {
-                                    // Normalizar o nome do campo também
-                                    const normalizedFieldName = field.name.toLowerCase().trim()
-                                        .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
-                                        .replace(/[^a-z0-9]/g, '');
-                                    
-                                    console.log(`Comparando "${normalizedHeader}" com "${normalizedFieldName}"`);
-                                    
-                                    // Verificar correspondência exata
-                                    if (normalizedFieldName === normalizedHeader) {
-                                        console.log(`Correspondência exata encontrada: "${header}" -> "${field.name}"`);
-                                        return true;
-                                    }
-                                    
-                                    // Verificações específicas para o campo CPF
-                                    if (field.id === 'cpfBeneficiario') {
-                                        const cpfVariations = [
-                                            'cpf', 
-                                            'cpfbeneficiario', 
-                                            'cpfdobeneficiario', 
-                                            'cpftitular',
-                                            'cpfdotitular',
-                                            'cpfdependente',
-                                            'cpfdodependente',
-                                            'cpfcliente',
-                                            'cpfdocliente',
-                                            'cpfpaciente',
-                                            'cpfdopaciente',
-                                            'cpfsegurado',
-                                            'cpfdosegurado',
-                                            'numerocpf',
-                                            'numerodocpf',
-                                            'cpfnumero',
-                                            'cpfdobeneficiario',
-                                            'cpf do beneficiario',
-                                            'cpf do beneficiário',
-                                            'cpf do titular',
-                                            'cpf do dependente',
-                                            'cpf do cliente',
-                                            'cpf do paciente',
-                                            'cpf do segurado'
-                                        ];
-                                        
-                                        // Verificar se o cabeçalho normalizado corresponde a alguma variação
-                                        const found = cpfVariations.some(variation => {
-                                            const normalizedVariation = variation.toLowerCase().trim()
-                                                .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
-                                                .replace(/[^a-z0-9]/g, '');
-                                            
-                                            const matches = normalizedHeader.includes(normalizedVariation) || 
-                                                          normalizedVariation.includes(normalizedHeader);
-                                            
-                                            if (matches) {
-                                                console.log(`Correspondência de CPF encontrada: "${header}" (${normalizedHeader}) corresponde a "${variation}" (${normalizedVariation})`);
-                                            }
-                                            
-                                            return matches;
-                                        });
-                                        
-                                        if (found) {
-                                            console.log(`Mapeamento de CPF encontrado: "${header}" -> cpfBeneficiario`);
-                                        }
-                                        
-                                        return found;
-                                    }
-                                    
-                                    // Verificar se o cabeçalho contém o nome do campo ou vice-versa
-                                    const containsMatch = normalizedFieldName.includes(normalizedHeader) ||
-                                                        normalizedHeader.includes(normalizedFieldName);
-                                    
-                                    if (containsMatch) {
-                                        console.log(`Correspondência parcial encontrada: "${header}" -> "${field.name}"`);
-                                    }
-                                    
-                                    return containsMatch;
-                                });
-                                
-                                if (matchingField) {
-                                    headerMapping[index] = matchingField.id;
-                                    console.log(`Mapeamento final: "${header}" -> "${matchingField.id}"`);
-                                } else {
-                                    console.warn(`Não foi possível mapear o cabeçalho "${header}" para nenhum campo`);
-                                }
-                            }
-                        });
-                        
-                        console.log('Mapeamento final de cabeçalhos:', headerMapping);
+                        // Remover cabeçalho e pegar dados
+                        const dataRows = jsonData.slice(1);
                         
                         // Limpar dados existentes
                         spreadsheetData = [];
                         sheetBody.innerHTML = '';
                         
-                        // Adicionar novas linhas com os dados do Excel
-                        rows.forEach((row, index) => {
-                            console.log(`Processando linha ${index + 1}:`, row);
-                            
-                            // Criar nova linha
+                        // Para cada linha de dados
+                        dataRows.forEach((row, index) => {
                             addNewRow();
-                            
-                            // Preencher os dados
-                            row.forEach((value, colIndex) => {
-                                const fieldId = headerMapping[colIndex];
-                                if (fieldId) {
-                                    console.log(`Preenchendo campo ${fieldId} com valor:`, value, 'tipo:', typeof value);
-                                    const input = document.querySelector(`tr[data-row-id="${index}"] input[data-field-id="${fieldId}"]`);
-                                    
+                            fields.forEach((field, fieldIndex) => {
+                                const value = row[fieldIndex];
+                                if (value !== undefined) {
+                                    const input = document.querySelector(`tr[data-row-id="${index}"] input[data-field-id="${field.id}"]`);
                                     if (input) {
-                                        // Tratamento especial para o campo CPF
-                                        if (fieldId === 'cpfBeneficiario') {
-                                            console.log('Processando campo CPF com valor original:', value);
-                                            
-                                            // Garantir que o valor seja tratado como string
-                                            let cpfValue = '';
-                                            
-                                            if (value !== null && value !== undefined) {
-                                                // Se for um número, converter para string
-                                                if (typeof value === 'number') {
-                                                    cpfValue = value.toString();
-                                                    // Se for número em notação científica
-                                                    if (cpfValue.includes('e+')) {
-                                                        cpfValue = Number(value).toFixed(0);
-                                                    }
-                                                } else {
-                                                    cpfValue = value.toString();
-                                                }
-                                                
-                                                // Remover qualquer caractere não numérico
-                                                cpfValue = cpfValue.replace(/[^\d]/g, '');
-                                                
-                                                console.log('CPF após limpeza inicial:', cpfValue);
-                                                
-                                                // Se o CPF estiver vazio após a limpeza, tentar outros formatos
-                                                if (!cpfValue && typeof value === 'number') {
-                                                    cpfValue = value.toFixed(0);
-                                                }
-                                                
-                                                // Tratar o comprimento do CPF
-                                                if (cpfValue.length > 11) {
-                                                    // Se tiver mais de 11 dígitos, pegar apenas os 11 últimos
-                                                    cpfValue = cpfValue.slice(-11);
-                                                } else if (cpfValue.length > 0 && cpfValue.length < 11) {
-                                                    // Se tiver menos de 11 dígitos mas não estiver vazio, completar com zeros
-                                                    cpfValue = cpfValue.padStart(11, '0');
-                                                }
-                                                
-                                                // Verificar se é um CPF válido (tem 11 dígitos e não é só zeros)
-                                                if (cpfValue.length === 11 && !/^0+$/.test(cpfValue)) {
-                                                    // Manter o valor do CPF
-                                                    console.log('CPF válido encontrado:', cpfValue);
-                                                } else if (!cpfValue) {
-                                                    // Se estiver vazio, manter vazio
-                                                    cpfValue = '';
-                                                }
-                                            }
-                                            
-                                            console.log('CPF final formatado:', cpfValue);
-                                            
-                                            // Atualizar o valor
-                                            input.value = cpfValue;
-                                            spreadsheetData[index][fieldId] = cpfValue;
-                                        } else {
-                                            input.value = value;
-                                            spreadsheetData[index][fieldId] = value;
-                                        }
-                                    } else {
-                                        console.warn(`Campo ${fieldId} não encontrado na linha ${index}`);
+                                        input.value = value;
+                                        spreadsheetData[index][field.id] = value;
                                     }
-                                } else {
-                                    console.warn(`Cabeçalho na coluna ${colIndex} não encontrado no mapeamento`);
                                 }
                             });
                             
@@ -1622,10 +1418,10 @@ document.addEventListener('DOMContentLoaded', function() {
                             }
                         });
                         
-                        showAlert(`Arquivo importado com sucesso! ${rows.length} registros adicionados.`, 'success');
+                        showAlert(`Arquivo importado com sucesso! ${dataRows.length} registros adicionados.`, 'success');
                     } catch (error) {
                         console.error('Erro ao processar arquivo:', error);
-                        showAlert('Erro ao processar o arquivo. Verifique se o formato está correto. Detalhes: ' + error.message, 'error');
+                        showAlert('Erro ao processar o arquivo: ' + error.message, 'error');
                     }
                 };
                 
