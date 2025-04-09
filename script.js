@@ -394,9 +394,13 @@ document.addEventListener('DOMContentLoaded', function() {
             if (field.id === 'tipoRegistro') {
                 rowData[field.id] = defaultTipoRegistro || '';
             } else if (field.id === 'tipoMovimentacao') {
-                rowData[field.id] = '1'; // Valor padrão para tipo de movimentação
+                rowData[field.id] = '1'; // Valor fixo para tipo de movimentação
             } else if (field.id === 'dataOperacao') {
-                rowData[field.id] = dataAtual; // Data atual no formato DDMMAAAA
+                const today = new Date();
+                const day = String(today.getDate()).padStart(2, '0');
+                const month = String(today.getMonth() + 1).padStart(2, '0');
+                const year = today.getFullYear();
+                rowData[field.id] = `${day}${month}${year}`;
             } else {
                 rowData[field.id] = '';
             }
@@ -445,121 +449,28 @@ document.addEventListener('DOMContentLoaded', function() {
             // Adicionar classes para estilização do tooltip
             input.classList.add('tooltip-input');
             
-            // Adicionar evento de colagem específico para cada célula
-            input.addEventListener('paste', function(e) {
-                e.preventDefault();
-                
-                const clipboardData = e.clipboardData;
-                const pastedData = clipboardData.getData('text');
-                
-                // Se for o campo sequencial, não permitir colagem
-                if (field.id === 'sequencialRegistro') {
-                    return;
-                }
-                
-                // Verificar se os dados contêm tabulações (múltiplos campos)
-                if (pastedData.includes('\t')) {
-                    // Dividir os dados em linhas
-                    const rows = pastedData.split('\n')
-                        .map(row => row.trim())
-                        .filter(row => row !== '');
-                    
-                    // Para cada linha
-                    rows.forEach((row, rowIndex) => {
-                        // Dividir a linha em campos usando tabulação
-                        const fields = row.split('\t');
-                        
-                        // Pegar a linha atual ou criar uma nova
-                        let currentRowIndex = parseInt(this.closest('tr').dataset.rowId) + rowIndex;
-                        
-                        // Se precisar de mais linhas, adicionar
-                        while (currentRowIndex >= spreadsheetData.length) {
-                            addNewRow();
-                        }
-                        
-                        // Para cada campo na linha
-                        fields.forEach((value, fieldIndex) => {
-                            // Pegar o valor diretamente do campo correspondente
-                            const fieldValue = value || '';
-                            
-                            // Encontrar o input na linha correta
-                            const row = document.querySelector(`tr[data-row-id="${currentRowIndex}"]`);
-                            const input = row.querySelector(`input[data-field-id="${fields[fieldIndex].id}"]`);
-                            
-                            if (input) {
-                                // Atualizar o valor diretamente, sem tratamentos especiais
-                                input.value = fieldValue;
-                                spreadsheetData[currentRowIndex][fields[fieldIndex].id] = fieldValue;
-                            }
-                        });
-                    });
-                    
-                    return;
-                }
-                
-                // Código original para dados sem tabulação
-                // Dividir os dados em linhas e remover linhas vazias
-                const rows = pastedData.split('\n')
-                    .map(row => row.trim())
-                    .filter(row => row !== '');
-                
-                // Pegar a linha atual
-                let currentRow = this.closest('tr');
-                let rowIndex = parseInt(currentRow.dataset.rowId);
-                
-                // Para cada linha de dados
-                rows.forEach((value, index) => {
-                    // Se for a primeira linha, usar a linha atual
-                    if (index === 0) {
-                        this.value = value;
-                        spreadsheetData[rowIndex][field.id] = value;
-                    } else {
-                        // Para as próximas linhas, criar novas se necessário
-                        if (rowIndex + index >= spreadsheetData.length) {
-                            addNewRow();
-                        }
-                        
-                        // Encontrar o input na linha correta
-                        const row = document.querySelector(`tr[data-row-id="${rowIndex + index}"]`);
-                        const input = row.querySelector(`input[data-field-id="${field.id}"]`);
-                        
-                        // Atualizar o valor
-                        input.value = value;
-                        spreadsheetData[rowIndex + index][field.id] = value;
-                    }
-                });
-            });
-            
-            // Definir o valor inicial
+            // Definir o valor inicial e configurações específicas para cada campo
             if (field.id === 'tipoRegistro') {
                 input.value = defaultTipoRegistro || '';
-                input.maxLength = 1; // Limitar a 1 caractere
+                input.maxLength = 1;
                 
                 // Adicionar validação para o campo tipo de registro
                 input.addEventListener('input', function(e) {
                     let valor = e.target.value.toUpperCase();
                     
-                    // Se o valor não estiver vazio, validar
                     if (valor && !TIPOS_REGISTRO_VALIDOS.includes(valor)) {
-                        // Mostrar alerta de erro
                         showAlert('Tipo de registro inválido. Use apenas: ' + TIPOS_REGISTRO_VALIDOS.join(', '), 'error');
-                        // Limpar o campo
                         e.target.value = '';
-                        // Atualizar os dados
                         const rowId = parseInt(e.target.dataset.rowId);
                         spreadsheetData[rowId][field.id] = '';
                         return;
                     }
                     
-                    // Manter sempre em maiúsculo
                     e.target.value = valor;
-                    
-                    // Atualizar os dados
                     const rowId = parseInt(e.target.dataset.rowId);
                     spreadsheetData[rowId][field.id] = valor;
                 });
                 
-                // Adicionar tooltip com os valores válidos
                 input.title = 'Valores válidos: ' + TIPOS_REGISTRO_VALIDOS.join(', ') + '\n' +
                              'N - Nova Adesão Titular\n' +
                              'C - Cancelamento\n' +
@@ -569,117 +480,28 @@ document.addEventListener('DOMContentLoaded', function() {
                              'I - Inclusão de Dependente\n' +
                              'E - Exclusão de Dependente';
                 
-                // Adicionar classe para estilo específico
                 input.classList.add('tipo-registro-input');
             } else if (field.id === 'sequencialRegistro') {
                 input.value = rowData[field.id];
                 input.disabled = true;
                 input.classList.add('bg-gray-100');
             } else if (field.id === 'tipoMovimentacao') {
-                input.value = '1'; // Valor padrão para tipo de movimentação
-                input.maxLength = 1; // Limitar a 1 caractere
-                
-                // Adicionar validação para o campo tipo de movimentação
-                input.addEventListener('input', function(e) {
-                    let valor = e.target.value;
-                    
-                    // Se o valor não estiver vazio, validar
-                    if (valor && !['1', '2'].includes(valor)) {
-                        // Mostrar alerta de erro
-                        showAlert('Tipo de movimentação inválido. Use apenas: 1 - Normal, 2 - Retroativa', 'error');
-                        // Limpar o campo
-                        e.target.value = '1';
-                        // Atualizar os dados
-                        const rowId = parseInt(e.target.dataset.rowId);
-                        spreadsheetData[rowId][field.id] = '1';
-                        return;
-                    }
-                    
-                    // Atualizar os dados
-                    const rowId = parseInt(e.target.dataset.rowId);
-                    spreadsheetData[rowId][field.id] = valor;
-                });
-                
-                // Adicionar classe para estilo específico
+                input.value = '1';
+                input.maxLength = 1;
                 input.classList.add('tipo-movimentacao-input');
             } else if (field.id === 'dataOperacao') {
-                input.value = dataAtual; // Data atual no formato DDMMAAAA
-                input.maxLength = 8; // Limitar a 8 caracteres (DDMMAAAA)
-                
-                // Adicionar validação para o campo data de operação
-                input.addEventListener('input', function(e) {
-                    let valor = e.target.value.replace(/\D/g, ''); // Remover caracteres não numéricos
-                    
-                    // Limitar a 8 dígitos
-                    valor = valor.substring(0, 8);
-                    
-                    // Atualizar o valor do campo
-                    e.target.value = valor;
-                    
-                    // Atualizar os dados
-                    const rowId = parseInt(e.target.dataset.rowId);
-                    spreadsheetData[rowId][field.id] = valor;
-                });
-                
-                // Adicionar classe para estilo específico
+                input.value = dataAtual;
+                input.maxLength = 8;
                 input.classList.add('data-input');
             } else if (field.id === 'cpfBeneficiario') {
+                input.value = rowData[field.id];
+                
                 // Adicionar validação para o campo CPF
                 input.addEventListener('input', function(e) {
-                    // Remover todos os caracteres não numéricos
-                    let valor = this.value.replace(/[^\d]/g, '');
-                    
-                    // Limitar a 11 dígitos
-                    valor = valor.substring(0, 11);
-                    
-                    // Atualizar o valor do campo imediatamente
-                    this.value = valor;
-                    
-                    // Validar o CPF se tiver 11 dígitos
-                    if (valor.length === 11) {
-                        if (!validateCPF(valor)) {
-                            showAlert('CPF inválido!', 'error');
-                            this.classList.add('invalid-cpf');
-                        } else {
-                            this.classList.remove('invalid-cpf');
-                        }
-                    }
-                    
-                    // Atualizar os dados
-                    const rowId = parseInt(this.dataset.rowId);
-                    spreadsheetData[rowId][field.id] = valor;
-                });
-                
-                // Adicionar evento de paste para tratar colagem de CPF
-                input.addEventListener('paste', function(e) {
-                    e.preventDefault();
-                    let valor = (e.clipboardData || window.clipboardData).getData('text');
-                    valor = valor.replace(/[^\d]/g, '');
-                    valor = valor.substring(0, 11);
-                    this.value = valor;
-                    
-                    // Validar o CPF se tiver 11 dígitos
-                    if (valor.length === 11) {
-                        if (!validateCPF(valor)) {
-                            showAlert('CPF inválido!', 'error');
-                            this.classList.add('invalid-cpf');
-                        } else {
-                            this.classList.remove('invalid-cpf');
-                        }
-                    }
-                    
-                    // Atualizar os dados
-                    const rowId = parseInt(this.dataset.rowId);
-                    spreadsheetData[rowId][field.id] = valor;
-                });
-                
-                // Adicionar evento de blur para garantir que a conversão aconteça quando o campo perde o foco
-                input.addEventListener('blur', function(e) {
                     let valor = this.value.replace(/[^\d]/g, '');
                     valor = valor.substring(0, 11);
                     this.value = valor;
                     
-                    // Validar o CPF se tiver 11 dígitos
                     if (valor.length === 11) {
                         if (!validateCPF(valor)) {
                             showAlert('CPF inválido!', 'error');
@@ -689,28 +511,29 @@ document.addEventListener('DOMContentLoaded', function() {
                         }
                     }
                     
-                    // Atualizar os dados
                     const rowId = parseInt(this.dataset.rowId);
                     spreadsheetData[rowId][field.id] = valor;
                 });
                 
-                // Adicionar classe para estilo específico
                 input.classList.add('cpf-input');
             } else {
                 input.value = rowData[field.id];
             }
             
-            input.addEventListener('focus', function() {
-                if (activeCell) activeCell.classList.remove('active-cell');
-                this.classList.add('active-cell');
-                activeCell = this;
-            });
-            
-            input.addEventListener('blur', function() {
-                const rowId = parseInt(this.dataset.rowId);
-                const fieldId = this.dataset.fieldId;
-                spreadsheetData[rowId][fieldId] = this.value.trim();
-            });
+            // Adicionar eventos de foco e blur apenas para campos editáveis
+            if (!input.disabled) {
+                input.addEventListener('focus', function() {
+                    if (activeCell) activeCell.classList.remove('active-cell');
+                    this.classList.add('active-cell');
+                    activeCell = this;
+                });
+                
+                input.addEventListener('blur', function() {
+                    const rowId = parseInt(this.dataset.rowId);
+                    const fieldId = this.dataset.fieldId;
+                    spreadsheetData[rowId][fieldId] = this.value.trim();
+                });
+            }
             
             cell.appendChild(input);
             row.appendChild(cell);
@@ -721,9 +544,6 @@ document.addEventListener('DOMContentLoaded', function() {
         // Focar no primeiro campo editável da nova linha
         const firstEditableInput = row.querySelector('input:not([disabled])');
         if (firstEditableInput) firstEditableInput.focus();
-        
-        // Debug: verificar dados após adicionar nova linha
-        console.log('Estado atual dos dados:', JSON.parse(JSON.stringify(spreadsheetData)));
     }
 
     // Função para criar modal de confirmação
@@ -985,7 +805,19 @@ document.addEventListener('DOMContentLoaded', function() {
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        a.download = filename;
+        
+        // Gerar nome do arquivo com data e hora atual
+        const now = new Date();
+        const year = now.getFullYear();
+        const month = String(now.getMonth() + 1).padStart(2, '0');
+        const day = String(now.getDate()).padStart(2, '0');
+        const hours = String(now.getHours()).padStart(2, '0');
+        const minutes = String(now.getMinutes()).padStart(2, '0');
+        const seconds = String(now.getSeconds()).padStart(2, '0');
+        
+        const formattedDate = `${year}${month}${day}_${hours}${minutes}${seconds}`;
+        a.download = `movimentacao_cadastral_${formattedDate}.txt`;
+        
         document.body.appendChild(a);
         a.click();
         document.body.removeChild(a);
@@ -1029,18 +861,17 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
                 
                 // Para cada campo na linha
-                fields.forEach((value, fieldIndex) => {
+                fields.forEach((fieldValue, fieldIndex) => {
                     // Pegar o valor diretamente do campo correspondente
-                    const fieldValue = value || '';
-                    
-                    // Encontrar o input na linha correta
-                    const row = document.querySelector(`tr[data-row-id="${currentRowIndex}"]`);
-                    const input = row.querySelector(`input[data-field-id="${fields[fieldIndex].id}"]`);
-                    
-                    if (input) {
-                        // Atualizar o valor diretamente, sem tratamentos especiais
-                        input.value = fieldValue;
-                        spreadsheetData[currentRowIndex][fields[fieldIndex].id] = fieldValue;
+                    if (fieldValue !== undefined) {
+                        const input = document.querySelector(`tr[data-row-id="${currentRowIndex}"] input[data-field-id="${fields[fieldIndex].id}"]`);
+                        if (input) {
+                            // Preservar valores dos campos tipoMovimentacao e dataOperacao
+                            if (!(fields[fieldIndex].id === 'tipoMovimentacao' || fields[fieldIndex].id === 'dataOperacao')) {
+                                input.value = fieldValue;
+                                spreadsheetData[currentRowIndex][fields[fieldIndex].id] = fieldValue;
+                            }
+                        }
                     }
                 });
             });
@@ -1390,8 +1221,11 @@ document.addEventListener('DOMContentLoaded', function() {
                                 if (value !== undefined) {
                                     const input = document.querySelector(`tr[data-row-id="${index}"] input[data-field-id="${field.id}"]`);
                                     if (input) {
-                                        input.value = value;
-                                        spreadsheetData[index][field.id] = value;
+                                        // Preservar valores dos campos tipoMovimentacao e dataOperacao
+                                        if (!(field.id === 'tipoMovimentacao' || field.id === 'dataOperacao')) {
+                                            input.value = value;
+                                            spreadsheetData[index][field.id] = value;
+                                        }
                                     }
                                 }
                             });
