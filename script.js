@@ -1640,14 +1640,165 @@ document.addEventListener('DOMContentLoaded', function() {
     // Inicializar a planilha
     initSpreadsheet();
 
-    // Criar botão de limpar
-    const btnClear = document.createElement('button');
-    btnClear.className = 'ml-2 p-2 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-full transition-colors';
-    btnClear.innerHTML = `
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-            <path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd"/>
-        </svg>
-    `;
+    // Remover a chamada para o tutorial inicial
+    // showInitialTutorial();
+
+    // Função para mostrar o tutorial inicial - removida
+    // function showInitialTutorial() {
+    //     const modal = document.createElement('div');
+    //     modal.className = 'fixed inset-0 z-50 flex items-center justify-center';
+    //     modal.innerHTML = `
+    //         <div class="fixed inset-0 bg-black bg-opacity-60 backdrop-blur-sm"></div>
+    //         <div class="relative bg-gradient-to-br from-white to-blue-50 rounded-xl shadow-2xl p-8 max-w-4xl w-full mx-4 z-10 transform transition-all duration-300 ease-in-out opacity-0 scale-95">
+    //             <div class="absolute top-0 right-0 p-4">
+    //                 <button class="text-gray-400 hover:text-gray-600 transition-colors">
+    //                     <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+    //                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+    //                     </svg>
+    //                 </button>
+    //             </div>
+    //             
+    //             <div class="flex items-center mb-6">
+    //                 <div class="bg-blue-600 text-white p-3 rounded-full mr-4">
+    //                     <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+    //                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+    //                     </svg>
+    //                 </div>
+    //                 <h2 class="text-3xl font-bold text-gray-900">Bem-vindo ao Gerador Master!</h2>
+    //             </div>
+    //             
+    //             <div class="prose prose-lg max-w-none">
+    //                 <div class="bg-white p-6 rounded-lg shadow-md mb-6">
+    //                     <h3 class="text-xl font-semibold text-blue-700 mb-4 flex items-center">
+    //                         <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 mr-2 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+    //                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+    //                         </svg>
+    //                         Como usar o sistema:
+    //                     </h3>
+    //                     <ol class="list-decimal pl-5 space-y-3">
+    //                         <li class="flex items-start">
+    //                             <span class="bg-blue-100 text-blue-800 font-bold rounded-full w-6 h-6 flex items-center justify-center mr-3 mt-0.5">1</span>
+    //                             <div>
+    //                                 <strong class="text-gray-800">Adicionar Registros:</strong> Use o botão "Adicionar Linha" ou importe dados de uma planilha.
+    //                             </div>
+    //                         </li>
+    //                         <li class="flex items-start">
+    //                             <span class="bg-blue-100 text-blue-800 font-bold rounded-full w-6 h-6 flex items-center justify-center mr-3 mt-0.5">2</span>
+    //                             <div>
+    //                                 <strong class="text-gray-800">Preencher Dados:</strong> Digite as informações nos campos. Os campos obrigatórios são marcados.
+    //                             </div>
+    //                         </li>
+    //                         <li class="flex items-start">
+    //                             <span class="bg-blue-100 text-blue-800 font-bold rounded-full w-6 h-6 flex items-center justify-center mr-3 mt-0.5">3</span>
+    //                             <div>
+    //                                 <strong class="text-gray-800">Importar Dados:</strong> Use o botão "Fazer Upload" para importar dados de uma planilha Excel.
+    //                             </div>
+    //                         </li>
+    //                         <li class="flex items-start">
+    //                             <span class="bg-blue-100 text-blue-800 font-bold rounded-full w-6 h-6 flex items-center justify-center mr-3 mt-0.5">4</span>
+    //                             <div>
+    //                                 <strong class="text-gray-800">Gerar Arquivo:</strong> Clique em "Gerar Arquivo" para criar o arquivo de movimentação.
+    //                             </div>
+    //                         </li>
+    //                         <li class="flex items-start">
+    //                             <span class="bg-blue-100 text-blue-800 font-bold rounded-full w-6 h-6 flex items-center justify-center mr-3 mt-0.5">5</span>
+    //                             <div>
+    //                                 <strong class="text-gray-800">Copiar/Download:</strong> Use os botões "Copiar" ou "Download" para salvar o arquivo.
+    //                             </div>
+    //                         </li>
+    //                     </ol>
+    //                 </div>
+    //                 
+    //                 <div class="bg-white p-6 rounded-lg shadow-md">
+    //                     <h3 class="text-xl font-semibold text-green-700 mb-4 flex items-center">
+    //                         <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 mr-2 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+    //                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+    //                         </svg>
+    //                         Dicas importantes:
+    //                     </h3>
+    //                     <ul class="list-none space-y-3">
+    //                         <li class="flex items-start">
+    //                             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-green-500 mr-3 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+    //                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+    //                             </svg>
+    //                             <div>
+    //                                 <strong class="text-gray-800">Tipo Reg.:</strong> Obrigatório e deve ser preenchido com um dos valores válidos.
+    //                             </div>
+    //                         </li>
+    //                         <li class="flex items-start">
+    //                             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-green-500 mr-3 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+    //                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+    //                             </svg>
+    //                             <div>
+    //                                 <strong class="text-gray-800">CPF:</strong> Validado automaticamente.
+    //                             </div>
+    //                         </li>
+    //                         <li class="flex items-start">
+    //                             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-green-500 mr-3 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+    //                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+    //                             </svg>
+    //                             <div>
+    //                                 <strong class="text-gray-800">Datas:</strong> Devem ser inseridas no formato DDMMAAAA.
+    //                             </div>
+    //                         </li>
+    //                         <li class="flex items-start">
+    //                             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-green-500 mr-3 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+    //                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+    //                             </svg>
+    //                             <div>
+    //                                 <strong class="text-gray-800">Layout:</strong> Use o botão "Download do Layout" para baixar um modelo de planilha.
+    //                             </div>
+    //                         </li>
+    //                     </ul>
+    //                 </div>
+    //             </div>
+    //             
+    //             <div class="mt-8 flex justify-end">
+    //                 <button class="px-6 py-3 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-lg hover:from-blue-700 hover:to-blue-800 transition-all duration-300 transform hover:scale-105 shadow-lg flex items-center">
+    //                     <span>Entendi, vamos começar!</span>
+    //                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 ml-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+    //                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3" />
+    //                     </svg>
+    //                 </button>
+    //             </div>
+    //         </div>
+    //     `;
+    //     
+    //     document.body.appendChild(modal);
+    //     
+    //     // Adicionar animação de entrada
+    //     setTimeout(() => {
+    //         modal.querySelector('.relative').classList.add('opacity-100', 'scale-100');
+    //         modal.querySelector('.relative').classList.remove('opacity-0', 'scale-95');
+    //     }, 10);
+    //     
+    //     // Fechar o modal ao clicar no botão
+    //     modal.querySelector('button').onclick = () => {
+    //         modal.querySelector('.relative').classList.add('opacity-0', 'scale-95');
+    //         modal.querySelector('.relative').classList.remove('opacity-100', 'scale-100');
+    //         setTimeout(() => {
+    //             modal.remove();
+    //         }, 300);
+    //     };
+    //     
+    //     // Fechar o modal ao clicar no overlay
+    //     modal.querySelector('.bg-black').onclick = () => {
+    //         modal.querySelector('.relative').classList.add('opacity-0', 'scale-95');
+    //         modal.querySelector('.relative').classList.remove('opacity-100', 'scale-100');
+    //         setTimeout(() => {
+    //             modal.remove();
+    //         }, 300);
+    //     };
+    //     
+    //     // Fechar o modal ao clicar no X
+    //     modal.querySelector('.text-gray-400').onclick = () => {
+    //         modal.querySelector('.relative').classList.add('opacity-0', 'scale-95');
+    //         modal.querySelector('.relative').classList.remove('opacity-100', 'scale-100');
+    //         setTimeout(() => {
+    //             modal.remove();
+    //         }, 300);
+    //     };
+    // }
 
     // Adicionar tooltip
     btnClear.title = 'Limpar todos os dados';
