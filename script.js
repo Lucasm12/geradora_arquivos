@@ -1186,73 +1186,112 @@ document.addEventListener('DOMContentLoaded', function() {
                         const firstSheetName = workbook.SheetNames[0];
                         const worksheet = workbook.Sheets[firstSheetName];
                         
-                        // Converter para JSON com opções específicas
-                        const jsonData = XLSX.utils.sheet_to_json(worksheet, { 
-                            header: 1,
-                            raw: false,
-                            defval: '',
-                            blankrows: false
-                        });
-                        
-                        // Verificar se há dados
-                        if (jsonData.length === 0) {
-                            showAlert('O arquivo não contém dados. Verifique se a planilha está preenchida.', 'error');
-                            return;
-                        }
-                        
-                        // Verificar se há dados suficientes
-                        if (jsonData.length < 2) {
-                            showAlert('O arquivo não contém dados suficientes. Verifique se há pelo menos um cabeçalho e uma linha de dados.', 'warning');
-                            return;
-                        }
-                        
-                        // Remover cabeçalho e pegar dados
-                        const dataRows = jsonData.slice(1);
-                        
-                        // Limpar dados existentes
-                        spreadsheetData = [];
-                        sheetBody.innerHTML = '';
-                        
-                        // Para cada linha de dados
-                        dataRows.forEach((row, index) => {
-                            addNewRow();
-                            fields.forEach((field, fieldIndex) => {
-                                const value = row[fieldIndex];
-                                if (value !== undefined) {
-                                    const input = document.querySelector(`tr[data-row-id="${index}"] input[data-field-id="${field.id}"]`);
-                                    if (input) {
-                                        // Preservar valores dos campos tipoMovimentacao e dataOperacao
-                                        if (!(field.id === 'tipoMovimentacao' || field.id === 'dataOperacao')) {
-                                            input.value = value;
-                                            spreadsheetData[index][field.id] = value;
+                        // Modificar a função de processamento do arquivo
+                        async function processFileData(data, worksheet) {
+                            try {
+                                // Converter para JSON
+                                const jsonData = XLSX.utils.sheet_to_json(worksheet, { 
+                                    header: 1,
+                                    raw: false,
+                                    defval: '',
+                                    blankrows: false
+                                });
+                                
+                                const dataRows = jsonData.slice(1);
+                                const totalRows = dataRows.length;
+
+                                // Mostrar modal de progresso
+                                const progressModal = document.createElement('div');
+                                progressModal.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50';
+                                progressModal.innerHTML = `
+                                    <div class="bg-white p-6 rounded-lg shadow-xl w-96">
+                                        <h3 class="text-lg font-semibold mb-4">Processando registros</h3>
+                                        <div class="mb-2">
+                                            <div class="flex justify-between text-sm text-gray-600 mb-1">
+                                                <span id="progressCounter">Processando: 0 de ${totalRows}</span>
+                                                <span id="progressPercentage">0%</span>
+                                            </div>
+                                            <div class="w-full bg-gray-200 rounded-full h-2">
+                                                <div id="progressBar" class="bg-blue-600 h-2 rounded-full transition-all" style="width: 0%"></div>
+                                            </div>
+                                        </div>
+                                        <div class="text-sm text-gray-500" id="speedInfo">
+                                            Velocidade de processamento: calculando...
+                                        </div>
+                                    </div>
+                                `;
+                                document.body.appendChild(progressModal);
+
+                                // Elementos de progresso
+                                const progressBar = document.getElementById('progressBar');
+                                const progressCounter = document.getElementById('progressCounter');
+                                const progressPercentage = document.getElementById('progressPercentage');
+                                const speedInfo = document.getElementById('speedInfo');
+
+                                // Limpar dados existentes
+                                spreadsheetData = [];
+                                sheetBody.innerHTML = '';
+
+                                // Variáveis para cálculo de velocidade
+                                const startTime = Date.now();
+                                let lastUpdate = startTime;
+                                let processedInLastSecond = 0;
+
+                                // Processar em chunks
+                                const CHUNK_SIZE = 100;
+                                for (let i = 0; i < dataRows.length; i += CHUNK_SIZE) {
+                                    const chunk = dataRows.slice(i, Math.min(i + CHUNK_SIZE, dataRows.length));
+                                    
+                                    await new Promise(resolve => setTimeout(resolve, 0)); // Permitir atualização da UI
+
+                                    chunk.forEach((row, chunkIndex) => {
+                                        const currentIndex = i + chunkIndex;
+                                        addNewRow();
+                                        fields.forEach((field, fieldIndex) => {
+                                            const value = row[fieldIndex];
+                                            if (value !== undefined) {
+                                                const input = document.querySelector(`tr[data-row-id="${currentIndex}"] input[data-field-id="${field.id}"]`);
+                                                if (input && !(field.id === 'tipoMovimentacao' || field.id === 'dataOperacao')) {
+                                                    input.value = value;
+                                                    if (!spreadsheetData[currentIndex]) spreadsheetData[currentIndex] = {};
+                                                    spreadsheetData[currentIndex][field.id] = value;
+                                                }
+                                            }
+                                        });
+
+                                        // Atualizar progresso
+                                        const progress = Math.round(((currentIndex + 1) / totalRows) * 100);
+                                        progressBar.style.width = `${progress}%`;
+                                        progressCounter.textContent = `Processando: ${currentIndex + 1} de ${totalRows}`;
+                                        progressPercentage.textContent = `${progress}%`;
+
+                                        // Calcular velocidade de processamento
+                                        processedInLastSecond++;
+                                        const now = Date.now();
+                                        if (now - lastUpdate >= 1000) { // Atualizar a cada segundo
+                                            const recordsPerSecond = Math.round(processedInLastSecond * 1000 / (now - lastUpdate));
+                                            const timeRemaining = Math.round((totalRows - (currentIndex + 1)) / recordsPerSecond);
+                                            speedInfo.textContent = `Velocidade: ${recordsPerSecond} registros/s | Tempo restante: ~${timeRemaining}s`;
+                                            lastUpdate = now;
+                                            processedInLastSecond = 0;
                                         }
-                                    }
+                                    });
                                 }
-                            });
-                            
-                            // Se o tipo de registro não foi preenchido, usar o valor padrão
-                            if (!spreadsheetData[index].tipoRegistro && defaultTipoRegistro) {
-                                spreadsheetData[index].tipoRegistro = defaultTipoRegistro;
-                                const tipoRegistroInput = document.querySelector(`tr[data-row-id="${index}"] input[data-field-id="tipoRegistro"]`);
-                                if (tipoRegistroInput) {
-                                    tipoRegistroInput.value = defaultTipoRegistro;
-                                }
+
+                                // Remover modal de progresso
+                                progressModal.remove();
+
+                                // Mostrar mensagem de sucesso
+                                showAlert(`Importação concluída! ${dataRows.length} registros processados.`, 'success');
+
+                            } catch (error) {
+                                console.error('Erro ao processar arquivo:', error);
+                                showAlert('Erro ao processar o arquivo: ' + error.message, 'error');
                             }
-                            
-                            // Verificar se o tipo de registro é válido
-                            const tipoRegistro = spreadsheetData[index].tipoRegistro;
-                            if (tipoRegistro && !['N', 'C', 'A', 'U', 'D', 'I', 'E'].includes(tipoRegistro)) {
-                                console.warn(`Tipo de registro inválido na linha ${index + 1}: ${tipoRegistro}`);
-                                showAlert(`Atenção: Tipo de registro inválido na linha ${index + 1}: ${tipoRegistro}. Será usado o valor padrão.`, 'warning');
-                                spreadsheetData[index].tipoRegistro = defaultTipoRegistro || 'N';
-                                const tipoRegistroInput = document.querySelector(`tr[data-row-id="${index}"] input[data-field-id="tipoRegistro"]`);
-                                if (tipoRegistroInput) {
-                                    tipoRegistroInput.value = spreadsheetData[index].tipoRegistro;
-                                }
-                            }
-                        });
-                        
-                        showAlert(`Arquivo importado com sucesso! ${dataRows.length} registros adicionados.`, 'success');
+                        }
+
+                        // Chamar a função para processar os dados do arquivo
+                        processFileData(data, worksheet);
                     } catch (error) {
                         console.error('Erro ao processar arquivo:', error);
                         showAlert('Erro ao processar o arquivo: ' + error.message, 'error');
@@ -1638,167 +1677,510 @@ document.addEventListener('DOMContentLoaded', function() {
     style.textContent += totalsStyles;
 
     // Inicializar a planilha
-    initSpreadsheet();
+    initSpreadsheet();    // Adicionar no início do arquivo, após as definições iniciais
+    const CHUNK_SIZE = 1000; // Tamanho do chunk para processamento
+    let processedRows = 0;
+    let totalRows = 0;
+    
+    // Criar e adicionar o container de progresso
+    const progressContainer = document.createElement('div');
+    progressContainer.id = 'progressContainer';
+    progressContainer.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden z-50';
+    progressContainer.innerHTML = `
+        <div class="bg-white p-6 rounded-lg shadow-xl max-w-md w-full mx-4">
+            <h3 class="text-lg font-medium text-gray-900 mb-4">Processando registros...</h3>
+            <div class="w-full bg-gray-200 rounded-full h-2.5 mb-4">
+                <div id="progressBar" class="bg-blue-600 h-2.5 rounded-full transition-all duration-300" style="width: 0%"></div>
+            </div>
+            <div class="flex justify-between text-sm text-gray-600">
+                <span id="progressText">0%</span>
+                <span id="progressCount">0 de 0 registros</span>
+            </div>
+        </div>
+    `;
+    document.body.appendChild(progressContainer);
+    
+    // Função para criar os botões do header
+    function createHeaderButtons() {
+        const headerBtns = document.createElement('div');
+        headerBtns.className = 'flex items-center gap-2 mb-4';        async function processFileInChunks(jsonData) {
+            const MAIN_CHUNK_SIZE = 2000;
+            const WORKER_BATCH_SIZE = 100;            async function processFileInChunks(jsonData) {
+                const MAIN_CHUNK_SIZE = 5000; // Aumentar tamanho do chunk
+                const MAX_WORKERS = Math.min(navigator.hardwareConcurrency || 4, 8); // Aumentar limite de workers
+                
+                let processedRows = 0;
+                const totalRows = jsonData.length;
+                
+                // Criar DocumentFragment para acumular mudanças do DOM
+                const fragment = document.createDocumentFragment();
+                
+                // Preparar workers
+                const workers = new Array(MAX_WORKERS).fill(null).map(() => new Worker('worker.js'));
+                const workQueue = [];
+                
+                try {
+                    // Dividir dados em chunks maiores
+                    for (let i = 0; i < jsonData.length; i += MAIN_CHUNK_SIZE) {
+                        const chunk = jsonData.slice(i, Math.min(i + MAIN_CHUNK_SIZE, jsonData.length));
+                        workQueue.push({ chunk, startIndex: i });
+                    }
+                    
+                    // Processar chunks em paralelo
+                    while (workQueue.length > 0 || workers.some(w => w.busy)) {
+                        // Encontrar workers disponíveis
+                        const availableWorkers = workers.filter(w => !w.busy);
+                        
+                        // Distribuir trabalho para workers disponíveis
+                        while (availableWorkers.length > 0 && workQueue.length > 0) {
+                            const worker = availableWorkers.pop();
+                            const work = workQueue.shift();
+                            
+                            worker.busy = true;
+                            worker.postMessage(work);
+                            
+                            // Processar resultados do worker
+                            worker.onmessage = async function(e) {
+                                if (e.data.type === 'complete') {
+                                    // Processar resultados em batch
+                                    const rows = e.data.data;
+                                    const batchFragment = document.createDocumentFragment();
+                                    
+                                    for (const rowData of rows) {
+                                        const row = createRowElement(rowData);
+                                        batchFragment.appendChild(row);
+                                        spreadsheetData[rowData.rowIndex] = rowData;
+                                        processedRows++;
+                                    }
+                                    
+                                    // Atualizar DOM em batch
+                                    requestAnimationFrame(() => {
+                                        sheetBody.appendChild(batchFragment);
+                                        updateProgress(processedRows, totalRows);
+                                    });
+                                    
+                                    worker.busy = false;
+                                }
+                            };
+                        }
+                        
+                        // Aguardar um pouco antes de verificar novamente
+                        await new Promise(resolve => setTimeout(resolve, 10));
+                    }
+                    
+                    // Limpar workers
+                    workers.forEach(w => w.terminate());
+                    
+                    showAlert(`Processamento concluído! ${totalRows} registros importados.`, 'success');
+                    
+                } catch (error) {
+                    console.error('Erro no processamento:', error);
+                    workers.forEach(w => w.terminate());
+                    showAlert('Erro ao processar arquivo: ' + error.message, 'error');
+                }
+            }
+            
+            // Função otimizada para criar elementos de linha
+            function createRowElement(rowData) {
+                const row = document.createElement('tr');
+                row.dataset.rowId = rowData.rowIndex;
+                
+                // Usar innerHTML para criação mais rápida
+                let cellsHTML = '';
+                
+                fields.forEach(field => {
+                    const value = rowData[field.id] || '';
+                    const tooltip = FIELD_TOOLTIPS[field.id] || field.description;
+                    
+                    cellsHTML += `
+                        <td>
+                            <input type="text"
+                                   class="cell-input"
+                                   data-field-id="${field.id}"
+                                   data-row-id="${rowData.rowIndex}"
+                                   value="${value}"
+                                   title="${tooltip}">
+                        </td>
+                    `;
+                });
+                
+                row.innerHTML = cellsHTML;
+                return row;
+            }
+            
+            // Função otimizada para atualizar progresso
+            function updateProgress(current, total) {
+                requestAnimationFrame(() => {
+                    const progress = Math.round((current / total) * 100);
+                    document.getElementById('progressBar').style.width = `${progress}%`;
+                    document.getElementById('progressText').textContent = `${progress}%`;
+                    document.getElementById('progressCount').textContent = 
+                        `${current.toLocaleString()} de ${total.toLocaleString()} registros`;
+                });
+            }
+            const MAX_WORKERS = Math.min(navigator.hardwareConcurrency || 4, 4); // Limitar número máximo de workers
+            
+            let processedRows = 0;
+            const totalRows = jsonData.length;
+            
+            // Mostrar modal de progresso
+            const progressModal = createProgressModal(totalRows);
+            document.body.appendChild(progressModal);
+            
+            const workers = [];
+            const pendingChunks = [];
+            
+            try {
+                // Inicializar workers
+                for (let i = 0; i < MAX_WORKERS; i++) {
+                    const worker = new Worker('worker.js');
+                    worker.chunkInProgress = false;
+                    
+                    worker.onmessage = function(e) {
+                        const { type, data, currentIndex, total } = e.data;
+                        
+                        if (type === 'batch') {
+                            // Processar batch de dados
+                            requestAnimationFrame(() => {
+                                updateSpreadsheet(data);
+                                updateProgress(processedRows + currentIndex, totalRows);
+                            });
+                        } else if (type === 'complete') {
+                            worker.chunkInProgress = false;
+                            processNextChunk(worker);
+                        } else if (type === 'error') {
+                            throw new Error(e.data.error);
+                        }
+                    };
+                    
+                    workers.push(worker);
+                }
+                
+                // Dividir dados em chunks principais
+                for (let i = 0; i < jsonData.length; i += MAIN_CHUNK_SIZE) {
+                    const chunk = jsonData.slice(i, i + MAIN_CHUNK_SIZE);
+                    pendingChunks.push({
+                        chunk,
+                        startIndex: i
+                    });
+                }
+                
+                // Iniciar processamento
+                workers.forEach(worker => processNextChunk(worker));
+                
+                // Aguardar conclusão de todos os chunks
+                await new Promise((resolve, reject) => {
+                    const checkCompletion = setInterval(() => {
+                        if (pendingChunks.length === 0 && workers.every(w => !w.chunkInProgress)) {
+                            clearInterval(checkCompletion);
+                            resolve();
+                        }
+                    }, 100);
+                });
+                
+                // Limpar workers
+                workers.forEach(w => w.terminate());
+                progressModal.remove();
+                showAlert(`Processamento concluído! ${totalRows} registros importados.`, 'success');
+                
+            } catch (error) {
+                workers.forEach(w => w.terminate());
+                progressModal.remove();
+                showAlert(`Erro no processamento: ${error.message}`, 'error');
+                throw error;
+            }
+            
+            function processNextChunk(worker) {
+                if (pendingChunks.length === 0) return;
+                
+                const nextChunk = pendingChunks.shift();
+                worker.chunkInProgress = true;
+                worker.postMessage({
+                    ...nextChunk,
+                    fields,
+                    batchSize: WORKER_BATCH_SIZE
+                });
+            }
+            
+            function updateSpreadsheet(data) {
+                const fragment = document.createDocumentFragment();
+                data.forEach(rowData => {
+                    const row = createRowElement(rowData);
+                    fragment.appendChild(row);
+                    spreadsheetData[rowData.rowIndex] = rowData;
+                    processedRows++;
+                });
+                sheetBody.appendChild(fragment);
+            }
+            
+            function updateProgress(current, total) {
+                const progress = Math.round((current / total) * 100);
+                const progressBar = document.getElementById('progressBar');
+                const progressText = document.getElementById('progressCounter');
+                
+                progressBar.style.width = `${progress}%`;
+                progressText.textContent = `Processando: ${current} de ${total}`;
+            }
+        }
+    
+        // Botão Download Layout
+        const btnDownloadLayout = document.createElement('button');
+        btnDownloadLayout.className = 'inline-flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg';
+        btnDownloadLayout.innerHTML = `
+            <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                <path d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z"/>
+            </svg>
+            Download do Layout
+        `;
+        btnDownloadLayout.onclick = () => window.open('https://docs.google.com/spreadsheets/d/1O-0UXFEwpq0MtPrtHT7a7lOZNVm3vRmX/edit?usp=drive_link&ouid=110128864082531091825&rtpof=true&sd=true', '_blank');
+    
+        // Botão Layout Vazio
+        const btnEmptyLayout = document.createElement('button');
+        btnEmptyLayout.className = 'inline-flex items-center px-4 py-2 bg-green-600 hover:bg-green-700 text-white text-sm font-medium rounded-lg';
+        btnEmptyLayout.innerHTML = `
+            <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                <path d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clip-rule="evenodd"/>
+            </svg>
+            Layout Vazio
+        `;
+        btnEmptyLayout.onclick = () => window.open('https://docs.google.com/spreadsheets/d/11bHil0n7yBZsSnYxnNu5Lb5XSDMfAKyN/edit?usp=drive_link&ouid=110128864082531091825&rtpof=true&sd=true', '_blank');
+    
+        // Botão Upload
+        const btnUpload = document.createElement('button');
+        btnUpload.className = 'inline-flex items-center px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white text-sm font-medium rounded-lg';
+        btnUpload.innerHTML = `
+            <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                <path d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clip-rule="evenodd"/>
+            </svg>
+            Fazer Upload
+        `;
+        btnUpload.onclick = handleUploadClick;
+    
+        // Adicionar botões ao container
+        headerBtns.appendChild(btnDownloadLayout);
+        headerBtns.appendChild(btnEmptyLayout);
+        headerBtns.appendChild(btnUpload);
+    
+        // Inserir no início da página
+        const mainContent = document.querySelector('main') || document.body;
+        mainContent.insertBefore(headerBtns, mainContent.firstChild);
+    
+        return headerBtns;
+    }
+    
+    // Função otimizada para processar arquivos grandes
+    async function processFileInChunks(jsonData) {
+        const progressBar = document.getElementById('progressBar');
+        const progressText = document.getElementById('progressText');
+        const progressCount = document.getElementById('progressCount');
+        const progressContainer = document.getElementById('progressContainer');
+    
+        totalRows = jsonData.length;
+        processedRows = 0;
+        progressContainer.classList.remove('hidden');
+    
+        // Limpar dados existentes
+        spreadsheetData = [];
+        sheetBody.innerHTML = '';
+    
+        for (let i = 0; i < jsonData.length; i += CHUNK_SIZE) {
+            const chunk = jsonData.slice(i, i + CHUNK_SIZE);
+            
+            // Processar chunk
+            await new Promise(resolve => {
+                setTimeout(() => {
+                    chunk.forEach(row => {
+                        addNewRow();
+                        processRowData(row, processedRows);
+                        processedRows++;
+                    });
+    
+                    // Atualizar progresso
+                    const progress = Math.round((processedRows / totalRows) * 100);
+                    progressBar.style.width = `${progress}%`;
+                    progressText.textContent = `${progress}%`;
+                    progressCount.textContent = `${processedRows} de ${totalRows} registros`;
+    
+                    resolve();
+                }, 0);
+            });
+        }
+    
+        // Ocultar barra de progresso
+        setTimeout(() => {
+            progressContainer.classList.add('hidden');
+            showAlert(`Importação concluída! ${processedRows} registros processados.`, 'success');
+        }, 500);
+    }
+    
+    // Função para processar uma linha de dados
+    function processRowData(row, index) {
+        fields.forEach((field, fieldIndex) => {
+            const value = row[fieldIndex];
+            if (value !== undefined) {
+                const input = document.querySelector(`tr[data-row-id="${index}"] input[data-field-id="${field.id}"]`);
+                if (input && !(field.id === 'tipoMovimentacao' || field.id === 'dataOperacao')) {
+                    input.value = value;
+                    if (!spreadsheetData[index]) spreadsheetData[index] = {};
+                    spreadsheetData[index][field.id] = value;
+                }
+            }
+        });
+    }    // filepath: script.js
+    // Modificar a função processFileInChunks
+    async function processFileInChunks(jsonData) {
+        const progressBar = document.getElementById('progressBar');
+        const progressText = document.getElementById('progressText');
+        const progressCount = document.getElementById('progressCount');
+        const speedInfo = document.getElementById('speedInfo');
+        const progressContainer = document.getElementById('progressContainer');
+    
+        totalRows = jsonData.length;
+        processedRows = 0;
+        progressContainer.classList.remove('hidden');
+    
+        // Limpar dados existentes
+        spreadsheetData = [];
+        sheetBody.innerHTML = '';
+    
+        // Configurar Web Workers
+        const numWorkers = navigator.hardwareConcurrency || 4; // Usar número de cores disponíveis
+        const workersPool = [];
+        const CHUNK_SIZE = 500; // Reduzir tamanho do chunk para processamento mais rápido
+        
+        // Criar pool de workers
+        for (let i = 0; i < numWorkers; i++) {
+            const worker = new Worker('worker.js');
+            workersPool.push(worker);
+        }
+    
+        // Função para processar chunk usando worker
+        const processChunkWithWorker = (chunk, startIndex, worker) => {
+            return new Promise((resolve) => {
+                worker.onmessage = (e) => {
+                    const processedData = e.data;
+                    resolve(processedData);
+                };
+                worker.postMessage({ chunk, fields, startIndex });
+            });
+        };
+    
+        // Variáveis para cálculo de velocidade
+        const startTime = Date.now();
+        let lastUpdate = startTime;
+        let processedInLastSecond = 0;
+        let averageSpeed = 0;
+        let speedMeasurements = 0;
+    
+        try {
+            // Dividir dados em chunks e processar em paralelo
+            for (let i = 0; i < jsonData.length; i += CHUNK_SIZE * numWorkers) {
+                const chunkPromises = [];
+                
+                // Distribuir chunks entre workers
+                for (let w = 0; w < numWorkers && (i + w * CHUNK_SIZE) < jsonData.length; w++) {
+                    const startIndex = i + w * CHUNK_SIZE;
+                    const chunk = jsonData.slice(startIndex, Math.min(startIndex + CHUNK_SIZE, jsonData.length));
+                    chunkPromises.push(processChunkWithWorker(chunk, startIndex, workersPool[w]));
+                }
+    
+                // Aguardar processamento dos chunks
+                const processedChunks = await Promise.all(chunkPromises);
+                
+                // Atualizar DOM em batch
+                const fragment = document.createDocumentFragment();
+                
+                processedChunks.flat().forEach(rowData => {
+                    const rowElement = createRowElement(rowData);
+                    fragment.appendChild(rowElement);
+                    spreadsheetData[rowData.rowIndex] = rowData;
+                    processedRows++;
+    
+                    // Calcular e atualizar velocidade
+                    processedInLastSecond++;
+                    const now = Date.now();
+                    if (now - lastUpdate >= 1000) {
+                        const currentSpeed = Math.round(processedInLastSecond * 1000 / (now - lastUpdate));
+                        averageSpeed = (averageSpeed * speedMeasurements + currentSpeed) / (speedMeasurements + 1);
+                        speedMeasurements++;
+                        
+                        const timeRemaining = Math.round((totalRows - processedRows) / averageSpeed);
+                        
+                        speedInfo.textContent = `
+                            Velocidade: ${currentSpeed} registros/s 
+                            | Média: ${Math.round(averageSpeed)} reg/s 
+                            | Tempo restante: ~${timeRemaining}s
+                        `;
+                        
+                        lastUpdate = now;
+                        processedInLastSecond = 0;
+                    }
+                });
+    
+                sheetBody.appendChild(fragment);
+    
+                // Atualizar progresso
+                const progress = Math.round((processedRows / totalRows) * 100);
+                progressBar.style.width = `${progress}%`;
+                progressText.textContent = `${progress}%`;
+                progressCount.textContent = `${processedRows} de ${totalRows} registros`;
+    
+                // Permitir atualização da UI
+                await new Promise(resolve => setTimeout(resolve, 0));
+            }
+    
+            // Limpar workers
+            workersPool.forEach(worker => worker.terminate());
+    
+            // Mostrar mensagem de sucesso
+            setTimeout(() => {
+                progressContainer.classList.add('hidden');
+                showAlert(`Importação concluída! ${processedRows} registros processados em ${Math.round((Date.now() - startTime)/1000)}s`, 'success');
+            }, 500);
+    
+        } catch (error) {
+            console.error('Erro durante o processamento:', error);
+            showAlert('Erro ao processar arquivo: ' + error.message, 'error');
+            workersPool.forEach(worker => worker.terminate());
+            progressContainer.classList.add('hidden');
+        }
+    }
+    
+    // Função auxiliar para criar elemento de linha
+    function createRowElement(rowData) {
+        const row = document.createElement('tr');
+        row.dataset.rowId = rowData.rowIndex;
+        
+        // Criar células
+        const cells = fields.map(field => {
+            const cell = document.createElement('td');
+            const input = document.createElement('input');
+            input.type = 'text';
+            input.className = 'cell-input';
+            input.dataset.fieldId = field.id;
+            input.dataset.rowId = rowData.rowIndex;
+            input.value = rowData[field.id] || '';
+            input.title = FIELD_TOOLTIPS[field.id] || field.description;
+            cell.appendChild(input);
+            return cell;
+        });
+        
+        cells.forEach(cell => row.appendChild(cell));
+        return row;
+    }
+    
+    // Modificar DOMContentLoaded
+    document.addEventListener('DOMContentLoaded', function() {
+        // ...código existente...
+        
+        // Criar botões do header
+        createHeaderButtons();
+        
+        // Inicializar planilha
+        initSpreadsheet();
+    });
 
-    // Remover a chamada para o tutorial inicial
-    // showInitialTutorial();
-
-    // Função para mostrar o tutorial inicial - removida
-    // function showInitialTutorial() {
-    //     const modal = document.createElement('div');
-    //     modal.className = 'fixed inset-0 z-50 flex items-center justify-center';
-    //     modal.innerHTML = `
-    //         <div class="fixed inset-0 bg-black bg-opacity-60 backdrop-blur-sm"></div>
-    //         <div class="relative bg-gradient-to-br from-white to-blue-50 rounded-xl shadow-2xl p-8 max-w-4xl w-full mx-4 z-10 transform transition-all duration-300 ease-in-out opacity-0 scale-95">
-    //             <div class="absolute top-0 right-0 p-4">
-    //                 <button class="text-gray-400 hover:text-gray-600 transition-colors">
-    //                     <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-    //                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-    //                     </svg>
-    //                 </button>
-    //             </div>
-    //             
-    //             <div class="flex items-center mb-6">
-    //                 <div class="bg-blue-600 text-white p-3 rounded-full mr-4">
-    //                     <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-    //                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-    //                     </svg>
-    //                 </div>
-    //                 <h2 class="text-3xl font-bold text-gray-900">Bem-vindo ao Gerador Master!</h2>
-    //             </div>
-    //             
-    //             <div class="prose prose-lg max-w-none">
-    //                 <div class="bg-white p-6 rounded-lg shadow-md mb-6">
-    //                     <h3 class="text-xl font-semibold text-blue-700 mb-4 flex items-center">
-    //                         <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 mr-2 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-    //                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-    //                         </svg>
-    //                         Como usar o sistema:
-    //                     </h3>
-    //                     <ol class="list-decimal pl-5 space-y-3">
-    //                         <li class="flex items-start">
-    //                             <span class="bg-blue-100 text-blue-800 font-bold rounded-full w-6 h-6 flex items-center justify-center mr-3 mt-0.5">1</span>
-    //                             <div>
-    //                                 <strong class="text-gray-800">Adicionar Registros:</strong> Use o botão "Adicionar Linha" ou importe dados de uma planilha.
-    //                             </div>
-    //                         </li>
-    //                         <li class="flex items-start">
-    //                             <span class="bg-blue-100 text-blue-800 font-bold rounded-full w-6 h-6 flex items-center justify-center mr-3 mt-0.5">2</span>
-    //                             <div>
-    //                                 <strong class="text-gray-800">Preencher Dados:</strong> Digite as informações nos campos. Os campos obrigatórios são marcados.
-    //                             </div>
-    //                         </li>
-    //                         <li class="flex items-start">
-    //                             <span class="bg-blue-100 text-blue-800 font-bold rounded-full w-6 h-6 flex items-center justify-center mr-3 mt-0.5">3</span>
-    //                             <div>
-    //                                 <strong class="text-gray-800">Importar Dados:</strong> Use o botão "Fazer Upload" para importar dados de uma planilha Excel.
-    //                             </div>
-    //                         </li>
-    //                         <li class="flex items-start">
-    //                             <span class="bg-blue-100 text-blue-800 font-bold rounded-full w-6 h-6 flex items-center justify-center mr-3 mt-0.5">4</span>
-    //                             <div>
-    //                                 <strong class="text-gray-800">Gerar Arquivo:</strong> Clique em "Gerar Arquivo" para criar o arquivo de movimentação.
-    //                             </div>
-    //                         </li>
-    //                         <li class="flex items-start">
-    //                             <span class="bg-blue-100 text-blue-800 font-bold rounded-full w-6 h-6 flex items-center justify-center mr-3 mt-0.5">5</span>
-    //                             <div>
-    //                                 <strong class="text-gray-800">Copiar/Download:</strong> Use os botões "Copiar" ou "Download" para salvar o arquivo.
-    //                             </div>
-    //                         </li>
-    //                     </ol>
-    //                 </div>
-    //                 
-    //                 <div class="bg-white p-6 rounded-lg shadow-md">
-    //                     <h3 class="text-xl font-semibold text-green-700 mb-4 flex items-center">
-    //                         <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 mr-2 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-    //                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-    //                         </svg>
-    //                         Dicas importantes:
-    //                     </h3>
-    //                     <ul class="list-none space-y-3">
-    //                         <li class="flex items-start">
-    //                             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-green-500 mr-3 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-    //                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-    //                             </svg>
-    //                             <div>
-    //                                 <strong class="text-gray-800">Tipo Reg.:</strong> Obrigatório e deve ser preenchido com um dos valores válidos.
-    //                             </div>
-    //                         </li>
-    //                         <li class="flex items-start">
-    //                             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-green-500 mr-3 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-    //                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-    //                             </svg>
-    //                             <div>
-    //                                 <strong class="text-gray-800">CPF:</strong> Validado automaticamente.
-    //                             </div>
-    //                         </li>
-    //                         <li class="flex items-start">
-    //                             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-green-500 mr-3 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-    //                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-    //                             </svg>
-    //                             <div>
-    //                                 <strong class="text-gray-800">Datas:</strong> Devem ser inseridas no formato DDMMAAAA.
-    //                             </div>
-    //                         </li>
-    //                         <li class="flex items-start">
-    //                             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-green-500 mr-3 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-    //                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-    //                             </svg>
-    //                             <div>
-    //                                 <strong class="text-gray-800">Layout:</strong> Use o botão "Download do Layout" para baixar um modelo de planilha.
-    //                             </div>
-    //                         </li>
-    //                     </ul>
-    //                 </div>
-    //             </div>
-    //             
-    //             <div class="mt-8 flex justify-end">
-    //                 <button class="px-6 py-3 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-lg hover:from-blue-700 hover:to-blue-800 transition-all duration-300 transform hover:scale-105 shadow-lg flex items-center">
-    //                     <span>Entendi, vamos começar!</span>
-    //                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 ml-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-    //                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3" />
-    //                     </svg>
-    //                 </button>
-    //             </div>
-    //         </div>
-    //     `;
-    //     
-    //     document.body.appendChild(modal);
-    //     
-    //     // Adicionar animação de entrada
-    //     setTimeout(() => {
-    //         modal.querySelector('.relative').classList.add('opacity-100', 'scale-100');
-    //         modal.querySelector('.relative').classList.remove('opacity-0', 'scale-95');
-    //     }, 10);
-    //     
-    //     // Fechar o modal ao clicar no botão
-    //     modal.querySelector('button').onclick = () => {
-    //         modal.querySelector('.relative').classList.add('opacity-0', 'scale-95');
-    //         modal.querySelector('.relative').classList.remove('opacity-100', 'scale-100');
-    //         setTimeout(() => {
-    //             modal.remove();
-    //         }, 300);
-    //     };
-    //     
-    //     // Fechar o modal ao clicar no overlay
-    //     modal.querySelector('.bg-black').onclick = () => {
-    //         modal.querySelector('.relative').classList.add('opacity-0', 'scale-95');
-    //         modal.querySelector('.relative').classList.remove('opacity-100', 'scale-100');
-    //         setTimeout(() => {
-    //             modal.remove();
-    //         }, 300);
-    //     };
-    //     
-    //     // Fechar o modal ao clicar no X
-    //     modal.querySelector('.text-gray-400').onclick = () => {
-    //         modal.querySelector('.relative').classList.add('opacity-0', 'scale-95');
-    //         modal.querySelector('.relative').classList.remove('opacity-100', 'scale-100');
-    //         setTimeout(() => {
-    //             modal.remove();
-    //         }, 300);
-    //     };
-    // }
+    
 
     // Adicionar tooltip
     btnClear.title = 'Limpar todos os dados';
